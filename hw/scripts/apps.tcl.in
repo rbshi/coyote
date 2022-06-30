@@ -1,0 +1,13 @@
+switch $cfg(apps) {
+    "dlm" {
+        puts "App: distributed lock manager"
+        set dlm_dir "$::env(HOME)/Workspace/hw/dlm"
+        add_files "$dlm_dir/src/main/lib/HashTable"
+        add_files "$dlm_dir/src/main/lib/LinkedList"
+        add_files "$dlm_dir/generated_rtl/dlm_$cfg(apps_config).v"
+    }
+
+    default {
+        puts "No application chosen"
+    }
+}

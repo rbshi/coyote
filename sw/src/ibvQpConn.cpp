@@ -40,8 +40,9 @@ ibvQpConn::ibvQpConn(cProc *fdev, uint32_t node_id, uint32_t n_pages) {
     // Initialize local queues
     initLocalQueue(node_id);
 
-     // ARP lookup
-    fdev->doArpLookup();
+    // ARP lookup
+    // FIXME: fcnfg.qsfp_rdma is private
+    fdev->doArpLookup(0);
 }
 
 /**

@@ -1,5 +1,7 @@
 set cfg(fdev)       ${FDEV_NAME}
 set cfg(example)    ${EXAMPLE}
+set cfg(apps)	    ${APPS}
+set cfg(apps_config) ${APPS_CONFIG}
 set cfg(en_hls)     ${EN_HLS}
 set cfg(n_reg)      ${N_REGIONS}
 set cfg(en_strm)    ${EN_STRM}

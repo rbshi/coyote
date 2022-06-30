@@ -89,7 +89,7 @@ constexpr auto const axiDataWidth = 64;
 constexpr auto const nNetRegs = 9;
 
 /* Def BASE_IP_ADDRESS */
-constexpr auto const baseIpAddress = 0x0A'01'D4'97;
+constexpr auto const baseIpAddress = 0x0a'01'd4'c0; // alveo 10.1.212.192
 
 /* QSFP regs offset */
 constexpr auto const qsfpOffsAvx = 4;
@@ -232,6 +232,7 @@ struct fCnfg {
     int32_t n_mem_chan = { 0 };
     uint32_t qsfp = { 0 };
     uint32_t qsfp_offs = { 0 };
+    uint32_t qsfp_rdma = { 0 };
 
     void parseCnfg(uint64_t cnfg) {
         en_avx = (cnfg >> 0) & 0x1;
@@ -252,8 +253,10 @@ struct fCnfg {
         en_net_0 = en_rdma_0 || en_tcp_0;
         en_net_1 = en_rdma_1 || en_tcp_1;
         en_net = en_net_0 || en_net_1;
-        qsfp = en_net_1;
-        qsfp_offs =  en_net_1 ? (en_avx ? qsfpOffsAvx : qsfpOffsLeg) : 0; 
+        // qsfp = en_net_1;
+        // qsfp_offs =  en_net_1 ? (en_avx ? qsfpOffsAvx : qsfpOffsLeg) : 0; 
+        qsfp_offs =  en_rdma_1 ? (en_avx ? qsfpOffsAvx : qsfpOffsLeg) : 0; 
+        qsfp_rdma = en_rdma_1 ? 1 : 0;
     }
 };
 

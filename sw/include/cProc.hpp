@@ -250,21 +250,21 @@ public:
 	 * @brief Change the IP address and board numbers
 	 * 
 	 */
-    void changeIpAddress(uint32_t ip_addr);
-    void changeBoardNumber(uint32_t board_num);
+    void changeIpAddress(uint32_t ip_addr, uint8_t i_qsfp);
+    void changeBoardNumber(uint32_t board_num, uint8_t i_qsfp);
 
 	/**
 	 * @brief Perform an arp lookup
 	 * 
 	 */
-    void doArpLookup();
+    void doArpLookup(uint8_t i_qsfp);
 	
 	/**
 	 * @brief Debug
 	 * 
 	 */
 	void printDebug();
-	void printNetDebug();
+	void printNetDebug(uint8_t i_qsfp);
 
 };
 

@@ -289,7 +289,7 @@ puts "****"
 # CUSTOM EXAMPLES
 ########################################################################################################
 source "${CMAKE_BINARY_DIR}/example.tcl" -notrace
-# source "${CMAKE_BINARY_DIR}/apps.tcl" -notrace
+source "${CMAKE_BINARY_DIR}/apps.tcl" -notrace
 
 puts "**** Example check"
 puts "****"
