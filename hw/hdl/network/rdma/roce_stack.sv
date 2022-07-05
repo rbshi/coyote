@@ -278,6 +278,9 @@ rocev2_ip rocev2_inst(
     .local_ip_address({local_ip_address,local_ip_address,local_ip_address,local_ip_address}), //Use IPv4 addr
 
     // Debug
+    .m_axis_dbg_0_TVALID(m_axis_dbg_0.valid),
+    .m_axis_dbg_0_TREADY(m_axis_dbg_0.ready),
+    .m_axis_dbg_0_TDATA(m_axis_dbg_0.data),    
     .regCrcDropPkgCount(crc_drop_pkg_count_data),
     .regCrcDropPkgCount_ap_vld(crc_drop_pkg_count_valid),
     .regInvalidPsnDropCount(psn_drop_pkg_count_data),
