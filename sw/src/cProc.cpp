@@ -752,6 +752,14 @@ void cProc::doArpLookup() {
 		throw std::runtime_error("ioctl_arp_lookup failed");
 }
 
+
+void cProc::doArpLookup(uint8_t i_qsfp) {
+	uint64_t tmp = i_qsfp;
+
+	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
+		throw std::runtime_error("ioctl_arp_lookup failed");
+}
+
 /**
  * Change the IP address
  */
@@ -764,12 +772,31 @@ void cProc::changeIpAddress(uint32_t ip_addr) {
 		throw std::runtime_error("ioctl_set_ip_address failed");
 }
 
+void cProc::changeIpAddress(uint32_t ip_addr, uint8_t i_qsfp) {
+    uint64_t tmp[2];
+	tmp[0] = i_qsfp;
+	tmp[1] = ip_addr;
+
+    if(ioctl(fd, IOCTL_SET_IP_ADDRESS, &tmp))
+		throw std::runtime_error("ioctl_set_ip_address failed");
+}
+
+
 /**
  * Change the board number
  */
 void cProc::changeBoardNumber(uint32_t board_num) {
     uint64_t tmp[2];
 	tmp[0] = fcnfg.qsfp;
+	tmp[1] = board_num;
+	
+    if(ioctl(fd, IOCTL_SET_BOARD_NUM, &tmp))
+		throw std::runtime_error("ioctl_set_board_num failed");
+}
+
+void cProc::changeBoardNumber(uint32_t board_num, uint8_t i_qsfp) {
+    uint64_t tmp[2];
+	tmp[0] = i_qsfp;
 	tmp[1] = board_num;
 	
     if(ioctl(fd, IOCTL_SET_BOARD_NUM, &tmp))

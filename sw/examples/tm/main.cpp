@@ -70,6 +70,8 @@ int main(int argc, char *argv[]) {
       iqp->closeConnection();
   }
 
+  cproc.printNetDebug();
+
   return EXIT_SUCCESS;
 }
 

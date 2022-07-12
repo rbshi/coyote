@@ -29,4 +29,3 @@ add_executable(task_gen ${COYOTE_SOURCES} task_gen.cpp)
 target_link_libraries(task_gen ${Boost_LIBRARIES})
 
 add_executable(tpcc_gen ${COYOTE_SOURCES} tpcc_gen.cpp)
-add_executable(hbm_rw ${COYOTE_SOURCES} hbm_rw.cpp)
