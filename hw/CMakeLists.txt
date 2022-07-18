@@ -311,7 +311,7 @@ else()
 endif()
 
 # Total mem AXI channels
-set(N_MEM_CHAN 0)
+set(N_MEM_CHAN 0 CACHE STRING "Number of memory channel to use.")
 set(N_MEM_CHAN_USR ${N_MEM_CHAN})
 if(EN_MEM)
     MATH(EXPR N_MEM_CHAN "${N_REGIONS} + 1 + ${N_MEM_CHAN}")
