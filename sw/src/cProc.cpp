@@ -749,6 +749,7 @@ void cProc::doArpLookup() {
 
 	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
 		throw std::runtime_error("ioctl_arp_lookup failed");
+	std::this_thread::sleep_for (std::chrono::seconds(1)); // wait for the hw arplookup taking effect
 }
 
 /**

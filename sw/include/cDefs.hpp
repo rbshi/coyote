@@ -89,7 +89,7 @@ constexpr auto const axiDataWidth = 64;
 constexpr auto const nNetRegs = 9;
 
 /* Def BASE_IP_ADDRESS */
-constexpr auto const baseIpAddress = 0x0A'01'D4'97;
+constexpr auto const baseIpAddress = 0x0A'FD'4A'82;
 
 /* QSFP regs offset */
 constexpr auto const qsfpOffsAvx = 4;
