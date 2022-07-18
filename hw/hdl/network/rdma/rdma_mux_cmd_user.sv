@@ -160,13 +160,14 @@ always_ff @(posedge aclk, negedge aresetn) begin: PROC_REG
 if (aresetn == 1'b0) begin
 	state_C <= ST_IDLE;
 end
-else
-	state_C <= state_N;
-    host_C <= host_N;
-    cnt_C <= cnt_N;
-    vfid_C <= vfid_N;
-    pid_C <= pid_N;
-    n_beats_C <= n_beats_N;
+else begin
+    	state_C <= state_N;
+        host_C <= host_N;
+        cnt_C <= cnt_N;
+        vfid_C <= vfid_N;
+        pid_C <= pid_N;
+        n_beats_C <= n_beats_N;
+    end
 end
 
 // NSL
