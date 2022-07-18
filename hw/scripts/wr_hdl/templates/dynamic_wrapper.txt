@@ -485,6 +485,7 @@ module design_dynamic_wrapper #(
     axis_decoupler (.decouple(decouple_uclk), .s_axis(axis_rdma_0_out_dcpl), .m_axis(axis_rdma_0_out_s1));
 
 {% endif %}	
+
 {% if cnfg.en_rdma_1 %}
     // ----------------------------------------------------------------------
     // RDMA (QSFP 1)
@@ -513,7 +514,7 @@ module design_dynamic_wrapper #(
         // SQ 
         rdma_req_parser #(.ID_REG(ID_DYN*N_REGIONS+i)) (.aclk(aclk), .aresetn(aresetn), .s_req(rdma_1_sq_user[i]), .m_req(rdma_1_sq_user_s0[i]), .used());
         
-        axis_interconnect_merger_256 inst_sq_merger_0 (
+        axis_interconnect_merger_544 inst_sq_merger_0 (
             .ACLK(aclk),
             .ARESETN(aresetn),
             .S00_AXIS_ACLK(aclk),
