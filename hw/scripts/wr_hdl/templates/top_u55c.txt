@@ -398,8 +398,14 @@ module top (
     {% endfor %}
         .hrefclk(hrefclk),
         .hrefresetn(lckresetn),
+    {% if cnfg.en_mem_bpss and cnfg.en_uclk %}
+        // only work for en_mem_bpss & en_uclk
+        .aclk(uclk),
+        .aresetn(uresetn)
+    {% else %}
         .aclk(aclk),
         .aresetn(aresetn)
+    {% endif %}
     );
 {% endif %} 
 
