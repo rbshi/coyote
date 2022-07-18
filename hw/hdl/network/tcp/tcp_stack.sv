@@ -86,10 +86,17 @@ localparam ddrPortNetworkTx = 0;
 generate
 
 // Hash Table signals
+`ifdef VITIS_HLS
+metaIntf #(.STYPE(logic[96-1:0])) axis_ht_lup_req();
+metaIntf #(.STYPE(logic[120-1:0])) axis_ht_lup_rsp();
+metaIntf #(.STYPE(logic[144-1:0])) axis_ht_upd_req();
+metaIntf #(.STYPE(logic[152-1:0])) axis_ht_upd_rsp();
+`else 
 metaIntf #(.STYPE(logic[72-1:0])) axis_ht_lup_req();
 metaIntf #(.STYPE(logic[88-1:0])) axis_ht_lup_rsp();
 metaIntf #(.STYPE(logic[88-1:0])) axis_ht_upd_req();
 metaIntf #(.STYPE(logic[88-1:0])) axis_ht_upd_rsp();
+`endif 
 
 // Signals for registering
 AXI4S #(.AXI4S_DATA_BITS(AXI_NET_BITS)) axis_rxwrite_data();
@@ -258,9 +265,9 @@ toe_ip toe_inst_nb (
 .m_axis_rx_data_rsp_TLAST(m_axis_tcp_rx.tlast),
 
 // tx data
-.s_axis_tx_data_req_metadata_V_TVALID(axis_tx_metadata.valid),
-.s_axis_tx_data_req_metadata_V_TREADY(axis_tx_metadata.ready),
-.s_axis_tx_data_req_metadata_V_TDATA(axis_tx_metadata.data),
+.s_axis_tx_data_req_metadata_TVALID(axis_tx_metadata.valid),
+.s_axis_tx_data_req_metadata_TREADY(axis_tx_metadata.ready),
+.s_axis_tx_data_req_metadata_TDATA(axis_tx_metadata.data),
 .s_axis_tx_data_req_TVALID(s_axis_tcp_tx.tvalid),
 .s_axis_tx_data_req_TREADY(s_axis_tcp_tx.tready),
 .s_axis_tx_data_req_TDATA(s_axis_tcp_tx.tdata),

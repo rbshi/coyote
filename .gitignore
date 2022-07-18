@@ -6,6 +6,7 @@ hd_visual/
 ip_dir/
 xsim.dir/
 tb_user/
+apps/
 .Xil/
 csim/
 .vscode/
@@ -44,3 +45,4 @@ synth/
 *_funcsim.vhdl
 *.upgrade_log
 *.dcp
+*.d

@@ -55,7 +55,8 @@ cProc::cProc(int32_t vfid, pid_t pid) : vfid(vfid), pid(pid), plock(open_or_crea
 	DBG2("Enabled BPSS: " << fcnfg.en_bypass);
 	DBG2("Enabled TLBF: " << fcnfg.en_tlbf);
 	DBG2("Enabled WBACK: " << fcnfg.en_wb);
-	DBG2("Enabled DRAM: " << fcnfg.en_ddr);
+	DBG2("Enabled STRM: " << fcnfg.en_strm);
+	DBG2("Enabled MEM: " << fcnfg.en_mem);
 	DBG2("Enabled PR: " << fcnfg.en_pr);
 	if(fcnfg.en_net) {
 		DBG2("Enabled RDMA: " << fcnfg.en_rdma);
@@ -64,8 +65,6 @@ cProc::cProc(int32_t vfid, pid_t pid) : vfid(vfid), pid(pid), plock(open_or_crea
 	}
 	DBG2("Number of channels: " << fcnfg.n_fpga_chan);
 	DBG2("Number of vFPGAs: " << fcnfg.n_fpga_reg);
-	if(fcnfg.en_ddr || fcnfg.en_tcp)	
-		DBG2("Number of DDR channels: " << fcnfg.n_mem_chan);
 
 	// Mmap
 	mmapFpga();
@@ -339,7 +338,7 @@ void cProc::freeMem(void* vaddr) {
  * Main Coyote invoke operation
  */
 void cProc::invoke(const csInvokeAll& cs_invoke) {
-	if(isSync(cs_invoke.oper)) if(!fcnfg.en_ddr) return;
+	if(isSync(cs_invoke.oper)) if(!fcnfg.en_mem) return;
 	if(cs_invoke.oper == CoyoteOper::NOOP) return;
 
 	// Lock
@@ -750,6 +749,7 @@ void cProc::doArpLookup() {
 
 	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
 		throw std::runtime_error("ioctl_arp_lookup failed");
+	std::this_thread::sleep_for (std::chrono::seconds(1)); // wait for the hw arplookup taking effect
 }
 
 
@@ -758,6 +758,7 @@ void cProc::doArpLookup(uint8_t i_qsfp) {
 
 	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
 		throw std::runtime_error("ioctl_arp_lookup failed");
+	std::this_thread::sleep_for (std::chrono::seconds(1)); // wait for the hw arplookup taking effect
 }
 
 /**

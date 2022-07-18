@@ -79,9 +79,6 @@
 {% if cnfg.vit_hls %}
 `define VITIS_HLS
 {% endif %}
-{% if cnfg.cmac_v30 %}
-`define CMAC_V30
-{% endif %}
 	
 package lynxTypes;
 
@@ -251,7 +248,6 @@ package lynxTypes;
     parameter integer N_REGIONS = {{ cnfg.n_reg }};
     parameter integer N_DDR_CHAN = {{ cnfg.n_ddr_chan }};
     parameter integer N_MEM_CHAN = {{ cnfg.n_mem_chan }};
-    parameter integer N_MEM_CHAN_TCP = {{ cnfg.n_mem_chan_tcp }};
     parameter integer N_MEM_CHAN_USR = {{ cnfg.n_mem_chan_usr }};     
     parameter integer DDR_FRAG_SIZE = {{ cnfg.ddr_frag }};
     parameter integer DDR_CHAN_SIZE = {{ cnfg.ddr_size }};
@@ -260,8 +256,8 @@ package lynxTypes;
     parameter integer BPSS_FLOW = {{ cnfg.en_bpss }};
     parameter integer TLBF_FLOW = {{ cnfg.en_tlbf }};
     parameter integer WB_FLOW = {{ cnfg.en_wb }};
-    parameter integer DDR_FLOW = {{ cnfg.en_ddr }};
-    parameter integer HBM_FLOW = {{ cnfg.en_hbm }};
+    parameter integer STRM_FLOW = {{ cnfg.en_strm }};
+    parameter integer MEM_FLOW = {{ cnfg.en_mem }};
     parameter integer RDMA_0_FLOW = {{ cnfg.en_rdma_0 }};
     parameter integer RDMA_1_FLOW = {{ cnfg.en_rdma_1 }};
     parameter integer TCP_0_FLOW = {{ cnfg.en_tcp_0 }};

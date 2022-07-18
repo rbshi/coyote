@@ -27,6 +27,11 @@
 
 #include "fpga_drv.h"
 
+int cyt_arch = CYT_ARCH_PCI;
+
+module_param(cyt_arch, int, S_IRUSR);
+MODULE_PARM_DESC(cyt_arch, "target architecture");
+
 static int __init coyote_init(void) 
 {
     int ret_val = 0;

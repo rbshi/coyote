@@ -181,12 +181,14 @@ if {$cfg(en_dcard) eq 1} {
 }
 
 if {$cfg(en_hcard) eq 1} {
-    if {$cfg(en_membpss) eq 1} {
-        # experimental hbm bd with dual clock axi smart connect, but consume resource
-        source "$scripts_dir/bd/cr_hbm_exp.tcl" -notrace 
+    if {$cfg(hbm_split) eq 1} {
+      source "$scripts_dir/bd/cr_hbm_split.tcl" -notrace 
+    } elseif {$cfg(hbm_bpss) eq 1} {
+      source "$scripts_dir/bd/cr_hbm_bpss.tcl" -notrace
     } else {
-        source "$scripts_dir/bd/cr_hbm.tcl" -notrace 
+      source "$scripts_dir/bd/cr_hbm.tcl" -notrace
     }
+
     cr_bd_design_hbm ""
     set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files design_hbm.bd ]
 }

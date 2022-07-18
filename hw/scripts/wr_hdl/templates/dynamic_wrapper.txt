@@ -27,7 +27,7 @@ module design_dynamic_wrapper #(
     AXI4.m									m_axi_ddr [1+N_REGIONS],
     
 {% endif %}
-{% if cnfg.en_membpss %}
+{% if cnfg.en_mem_bpss %}
     // AXI4 DDR 
     AXI4.m                                  m_axi_ddr [N_MEM_CHAN_USR],
     
@@ -1170,7 +1170,7 @@ module design_dynamic_wrapper #(
         .axis_card_src_tready   (axis_card_out_dcpl[{{ i }}].tready),
         .axis_card_src_tvalid   (axis_card_out_dcpl[{{ i }}].tvalid),
 {% endif %}
-{% if cnfg.en_membpss %}
+{% if cnfg.en_mem_bpss %}
     {% for j in range(0, cnfg.n_mem_chan_usr) %}
         .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_araddr(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].araddr),
         .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arburst(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arburst),

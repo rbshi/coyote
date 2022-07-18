@@ -28,6 +28,8 @@ set_property IOSTANDARD  LVDS 	  [get_ports hbm_clk_clk_n] ;# Bank  68 VCCO - VC
 set_property PACKAGE_PIN BK10     [get_ports hbm_clk_clk_p] ;# Bank  68 VCCO - VCC1V8   - IO_L11P_T1U_N8_GC_68
 set_property IOSTANDARD  LVDS 	  [get_ports hbm_clk_clk_p] ;# Bank  68 VCCO - VCC1V8   - IO_L11P_T1U_N8_GC_68
 
+create_clock -period 10.000 -name hbmrefclk     [get_ports  hbm_clk_clk_p] ;
+
 # Burn
 set_property PACKAGE_PIN BE45     [get_ports fpga_burn]       ;# Bank  68 VCCO - VCC1V8   - IO_L6N_T0U_N11_AD6N_68
 set_property IOSTANDARD  LVCMOS18 [get_ports fpga_burn]       ;# Bank  68 VCCO - VCC1V8   - IO_L6N_T0U_N11_AD6N_68
