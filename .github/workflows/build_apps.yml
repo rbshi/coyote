@@ -16,7 +16,6 @@ jobs:
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_dlm && cd build_dlm
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEN_BPSS=1 -DHBM_BPSS=1 -DEN_RDMA_0=1 -DEN_UCLK=1 -DUCLK_F=250 -DAXI_ID_BITS=6 \
-        # -DEN_IPCACHE=1 -DIPCACHE_DIR=/home/runshi/Workspace/hw/coyote_build/ipcache/20221 \
         -DAPPS=dlm -DAPPS_CONFIG=1t2n1c8p \
         -DN_MEM_CHAN=4 -DEN_MEM_BPSS=1 -DEN_RPC=1
         make shell
