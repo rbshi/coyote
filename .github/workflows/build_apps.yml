@@ -6,16 +6,11 @@ on:
   pull_request:
     branches: [ "dev_txn" ]
 
-jobs:
-  setup:
+jobs: 
+  build_dlm:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3
-  
-  build_dlm:
-    needs: setup
-    runs-on: self-hosted
-    steps:
     - name: Compile DLM example
       run: |
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
