@@ -17,10 +17,11 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Vivado environment activation
-      run: source ~runshi/tools/scripts/en_vivado.sh 2022.1 && which vivado
+      run: source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
 
     - name: Compile DLM example
       run: |
+        source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_dlm && cd build_dlm
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEN_BPSS=1 -DHBM_BPSS=1 -DEN_RDMA_0=1 -DEN_UCLK=1 -DUCLK_F=250 -DAXI_ID_BITS=6 \
         -DEN_IPCACHE=1 -DIPCACHE_DIR=/home/runshi/Workspace/hw/coyote_build/ipcache/20221 \
