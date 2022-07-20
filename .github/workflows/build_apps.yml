@@ -1,4 +1,4 @@
-name: Project build
+name: Build applications
 
 on:
   push:
@@ -11,8 +11,6 @@ jobs:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3
-    - name: Vivado environment activation
-      run: source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
   
   build_dlm:
     needs: setup
@@ -26,11 +24,4 @@ jobs:
         -DEN_IPCACHE=1 -DIPCACHE_DIR=/home/runshi/Workspace/hw/coyote_build/ipcache/20221 \
         -DAPPS=dlm -DAPPS_CONFIG=1t2n1c8p \
         -DN_MEM_CHAN=4 -DEN_MEM_BPSS=1 -DEN_RPC=1
-        make shell && make compile
-        
-  test_echo:
-    needs: setup
-    runs-on: self-hosted
-    steps:
-    - name: Echo test
-      run: echo "Hello world!"
+        make shell
