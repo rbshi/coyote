@@ -8,7 +8,7 @@ on:
 
 jobs: 
   build_dlm:
-    runs-on: self-hosted
+    runs-on: desktop
     steps:
     - uses: actions/checkout@v3
     - name: Compile DLM example
