@@ -11,8 +11,6 @@ jobs:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3
-    - name: Vivado environment activation
-      run: source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
   
   build_bmark_host:
     needs: setup
@@ -20,6 +18,7 @@ jobs:
     steps:
     - name: Compile Benchmark Host Example
       run: |
+        source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_bmark_host && cd build_bmark_host
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEXAMPLE=bmark_host
         make shell
@@ -30,6 +29,7 @@ jobs:
     steps:
     - name: Compile RDMA Host Example
       run: |
+        source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_rdma_host && cd build_rdma_host
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEXAMPLE=rdma_host
         make shell
