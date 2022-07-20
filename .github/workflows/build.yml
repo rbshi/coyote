@@ -1,4 +1,4 @@
-name: CMake
+name: Project build
 
 on:
   push:
@@ -6,19 +6,18 @@ on:
   pull_request:
     branches: [ "dev_txn" ]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
-  build:
+  setup:
     runs-on: self-hosted
-
     steps:
     - uses: actions/checkout@v3
-    
     - name: Vivado environment activation
       run: source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
-
+  
+  build_dlm:
+    needs: setup
+    runs-on: self-hosted
+    steps:
     - name: Compile DLM example
       run: |
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
@@ -28,6 +27,10 @@ jobs:
         -DAPPS=dlm -DAPPS_CONFIG=1t2n1c8p \
         -DN_MEM_CHAN=4 -DEN_MEM_BPSS=1 -DEN_RPC=1
         make shell && make compile
-      
-    - name: Echo
+        
+  test_echo:
+    needs: setup
+    runs-on: self-hosted
+    steps:
+    - name: Echo test
       run: echo "Hello world!"
