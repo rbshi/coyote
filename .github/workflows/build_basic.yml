@@ -7,15 +7,10 @@ on:
     branches: [ "dev_hbm_bpss" ]
 
 jobs:
-  setup:
+  build_bmark_host:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3
-  
-  build_bmark_host:
-    needs: setup
-    runs-on: self-hosted
-    steps:
     - name: Compile Benchmark Host Example
       run: |
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
@@ -24,9 +19,9 @@ jobs:
         make shell
 
   build_rdma_host:
-    needs: setup
     runs-on: self-hosted
     steps:
+    - uses: actions/checkout@v3
     - name: Compile RDMA Host Example
       run: |
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
