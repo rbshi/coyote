@@ -16,7 +16,7 @@ jobs:
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_bmark_host && cd build_bmark_host
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEXAMPLE=bmark_host
-        make shell
+        make shell && make compile
 
   build_rdma_host:
     runs-on: self-hosted
@@ -27,4 +27,4 @@ jobs:
         source ~/tools/scripts/en_vivado.sh 2022.1 && which vivado
         mkdir build_rdma_host && cd build_rdma_host
         cmake ../hw/ -DFDEV_NAME=u55c -DVITIS_HLS=1 -DEXAMPLE=rdma_host
-        make shell
+        make shell && make compile
