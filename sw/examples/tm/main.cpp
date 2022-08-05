@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   cproc.changeIpAddress(ibv_ip_addr, 0);
   cproc.changeBoardNumber(node_id, 0);
 
-  initTxnCmd(cproc, txncnt, bin_fname, insoffs);  
+  initTxnCmd(cproc, txncnt, bin_fname, insoffs);
   txnManCnfg(cproc, node_id, txncnt, insoffs);
 
   // Create  queue pairs
