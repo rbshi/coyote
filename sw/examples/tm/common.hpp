@@ -60,7 +60,7 @@ enum class TXNENGRegs : uint32_t {
 
 // RDMA
 constexpr auto const nIdMaster = 0;
-constexpr auto const defMstrIp = "10.1.212.179"; // alveo-u55c-06
+constexpr auto const defMstrIp = "10.1.212.179"; // alveo-u55c-09
 constexpr auto const defPort = 5001;
 constexpr auto const qpId = 0;
 

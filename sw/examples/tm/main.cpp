@@ -7,6 +7,7 @@ int main(int argc, char *argv[]) {
   boost::program_options::options_description programDescription("Options:");
   programDescription.add_options()("txncnt,c", boost::program_options::value<uint32_t>(), "txncnt")
                                   ("nodeid,i", boost::program_options::value<uint32_t>(), "Node ID")
+                                  ("ibvaddr,a", boost::program_options::value<string>(), "IBV conn IP")
                                   ("bfname,b", boost::program_options::value<string>(), "Instruction bin name");
   boost::program_options::variables_map commandLineArgs;
   boost::program_options::store(boost::program_options::parse_command_line(argc, argv, programDescription), commandLineArgs);
@@ -21,7 +22,12 @@ int main(int argc, char *argv[]) {
   uint32_t node_id = nIdMaster;
   string mstr_ip_addr = defMstrIp;
   uint32_t port = defPort;
+
+  constexpr auto const defIbvIp = "192.168.98.97";
+  string ibv_ip = defIbvIp;
+
   if(commandLineArgs.count("nodeid") > 0) node_id = commandLineArgs["nodeid"].as<uint32_t>();
+  if(commandLineArgs.count("ibvaddr") > 0) ibv_ip = commandLineArgs["ibvaddr"].as<string>();
   bool mstr = node_id == nIdMaster;
   uint32_t ibv_ip_addr = baseIpAddress + node_id;
 
@@ -31,15 +37,16 @@ int main(int argc, char *argv[]) {
 
   // get fpga handle
   cProc cproc(0, getpid());
-  cproc.changeIpAddress(ibv_ip_addr, 0);
-  cproc.changeBoardNumber(node_id, 0);
+  cproc.changeIpAddress(ibv_ip_addr);
+  cproc.changeBoardNumber(node_id);
 
   initTxnCmd(cproc, txncnt, bin_fname, insoffs);
   txnManCnfg(cproc, node_id, txncnt, insoffs);
 
   // Create  queue pairs
   ibvQpMap ictx;
-  ictx.addQpair(qpId, &cproc, node_id, 1); // 1 page, will not be used
+  // ictx.addQpair(qpId, &cproc, node_id, 1); // 1 page, will not be used
+  ictx.addQpair(qpId, 0, node_id, ibv_ip, 1); // 1 page, will not be used
   mstr ? ictx.exchangeQpMaster(port) : ictx.exchangeQpSlave(mstr_ip_addr.c_str(), port);
   ibvQpConn *iqp = ictx.getQpairConn(qpId);
   iqp->ibvClear();

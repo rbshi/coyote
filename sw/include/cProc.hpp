@@ -116,6 +116,10 @@ protected:
 	uint32_t wr_cmd_cnt = { 0 };
 	uint32_t rdma_cmd_cnt = { 0 };
 
+	/* QSFP port */
+	uint32_t qsfp = { 0 };
+	uint32_t qsfp_offs = { 0 };
+
 	/* Mmapped regions */
 #ifdef EN_AVX
 	volatile __m256i *cnfg_reg_avx = { 0 };
@@ -146,7 +150,6 @@ protected:
 	/* Post to controller */
 	void postCmd(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t offs_0, int32_t send_flags = 0);
 	void postPrep(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t offs_0, uint8_t offs_reg = 0);
-	void postGo();
 	uint32_t last_qp = { 0 };
 
 public:
@@ -230,13 +233,17 @@ public:
 	auto isReconfigurable() const { return fcnfg.en_pr; }
 
 	/**
-	 * @brief Initiate an ibv command
+	 * @brief Change the IP address and board numbers
 	 * 
-	 * @param qp : queue pair struct
-	 * @param wr : rdma operation context struct
 	 */
-	void ibvPostSend(ibvQp *qp, ibvSendWr *wr);
-	void ibvPostGo(ibvQp *qp);
+    void changeIpAddress(uint32_t ip_addr);
+    void changeBoardNumber(uint32_t board_num);
+
+	/**
+	 * @brief Perform an arp lookup
+	 * 
+	 */
+    void doArpLookup(uint32_t ip_addr);
 
 	/**
 	 * @brief Write the queue pair context
@@ -245,30 +252,21 @@ public:
 	 */
     void writeQpContext(ibvQp *qp);
 	void writeConnContext(ibvQp *qp, uint32_t port);
-
-	/**
-	 * @brief Change the IP address and board numbers
-	 * 
-	 */
-    void changeIpAddress(uint32_t ip_addr);
-    void changeBoardNumber(uint32_t board_num);
-    void changeIpAddress(uint32_t ip_addr, uint8_t i_qsfp);
-    void changeBoardNumber(uint32_t board_num, uint8_t i_qsfp);
-
-	/**
-	 * @brief Perform an arp lookup
-	 * 
-	 */
-    void doArpLookup();
-    void doArpLookup(uint8_t i_qsfp);
 	
+	/**
+	 * @brief Initiate an ibv command
+	 * 
+	 * @param qp : queue pair struct
+	 * @param wr : rdma operation context struct
+	 */
+	void ibvPostSend(ibvQp *qp, ibvSendWr *wr);
+
 	/**
 	 * @brief Debug
 	 * 
 	 */
 	void printDebug();
 	void printNetDebug();
-	void printNetDebug(uint8_t i_qsfp);
 
 };
 

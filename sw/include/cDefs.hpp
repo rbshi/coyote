@@ -55,6 +55,12 @@ constexpr auto const hugePageShift = 21UL;
 constexpr auto const useHugePages = true;
 constexpr auto const clocNs = 4;
 
+/* Bits */
+constexpr auto const pidBits = 6;
+constexpr auto const pidMask = 0x3f;
+constexpr auto const nRegBits = 4;
+constexpr auto const nRegMask = 0xf;
+
 /* FIFOs */
 constexpr auto const cmdFifoDepth = 32;
 constexpr auto const cmdFifoThr = 10;
@@ -117,6 +123,9 @@ constexpr auto const ibvImmedMid = 0;
 constexpr auto const immedLowParams = 3;
 constexpr auto const immedMedParams = 7;
 constexpr auto const immedHighParams = 8;
+
+/* ARP sleep */
+constexpr auto const arpSleepTime = 1000000; //us
 
 enum class CoyoteOper {
     NOOP = 0,
