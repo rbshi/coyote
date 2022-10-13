@@ -59,7 +59,8 @@ module cyt_top (
     wire [0:0] aresetn;
 
 {% if cnfg.en_hcard %}
-    wire hrefclk;
+    wire hclk;
+    wire hresetn; 
 {% endif %}
 
     // IRQ
@@ -205,9 +206,9 @@ module cyt_top (
     // PR streams
     AXI4S axis_pr();
 
-    wire [1:0][31:0] axis_pr_data;
-    wire [1:0] axis_pr_ready;
-    wire [1:0] axis_pr_valid;
+    wire [N_REG_PR:0][31:0] axis_pr_data;
+    wire [N_REG_PR:0] axis_pr_ready;
+    wire [N_REG_PR:0] axis_pr_valid;
     
     // PR ICAP
     wire [31:0] icap_out;
@@ -367,7 +368,7 @@ module cyt_top (
         .axi_hbm_in_{{ i }}_arprot(axi_ddr_in[{{ i }}].arprot),
         .axi_hbm_in_{{ i }}_arqos(axi_ddr_in[{{ i }}].arqos),
         .axi_hbm_in_{{ i }}_arready(axi_ddr_in[{{ i }}].arready),
-        // .axi_hbm_in_{{ i }}_arregion(axi_ddr_in[{{ i }}].arregion),
+        .axi_hbm_in_{{ i }}_arregion(axi_ddr_in[{{ i }}].arregion),
         .axi_hbm_in_{{ i }}_arsize(axi_ddr_in[{{ i }}].arsize),
         .axi_hbm_in_{{ i }}_arvalid(axi_ddr_in[{{ i }}].arvalid),
         .axi_hbm_in_{{ i }}_awaddr(axi_ddr_in[{{ i }}].awaddr),
@@ -379,7 +380,7 @@ module cyt_top (
         .axi_hbm_in_{{ i }}_awprot(axi_ddr_in[{{ i }}].awprot),
         .axi_hbm_in_{{ i }}_awqos(axi_ddr_in[{{ i }}].awqos),
         .axi_hbm_in_{{ i }}_awready(axi_ddr_in[{{ i }}].awready),
-        // .axi_hbm_in_{{ i }}_awregion(axi_ddr_in[{{ i }}].awregion),
+        .axi_hbm_in_{{ i }}_awregion(axi_ddr_in[{{ i }}].awregion),
         .axi_hbm_in_{{ i }}_awsize(axi_ddr_in[{{ i }}].awsize),
         .axi_hbm_in_{{ i }}_awvalid(axi_ddr_in[{{ i }}].awvalid),
         .axi_hbm_in_{{ i }}_bid(axi_ddr_in[{{ i }}].bid),
@@ -398,16 +399,11 @@ module cyt_top (
         .axi_hbm_in_{{ i }}_wstrb(axi_ddr_in[{{ i }}].wstrb),
         .axi_hbm_in_{{ i }}_wvalid(axi_ddr_in[{{ i }}].wvalid),
     {% endfor %}
-        .hrefclk(hrefclk),
-        .hrefresetn(lckresetn),
-    {% if cnfg.en_mem_bpss and cnfg.en_uclk %}
-        // only work for en_mem_bpss & en_uclk
-        .aclk(uclk),
-        .aresetn(uresetn)
-    {% else %}
+        .hclk_int(),
+        .hclk(hclk),
+        .hresetn(hresetn),
         .aclk(aclk),
         .aresetn(aresetn)
-    {% endif %}
     );
 {% endif %} 
 
@@ -437,10 +433,12 @@ module cyt_top (
     IBUFDS #(
         .IBUF_LOW_PWR("TRUE")     // Low power="TRUE", Highest performance="FALSE" 
     ) IBUFDS0_inst (
-        .O(hrefclk),  // Buffer output
+        .O(hclk),  // Buffer output
         .I(hbm_clk_clk_p),  // Diff_p buffer input (connect directly to top-level port)
         .IB(hbm_clk_clk_n) // Diff_n buffer input (connect directly to top-level port)
     );
+
+    assign hresetn = lckresetn;
 {% endif %}
 
     // -----------------------------------------------------------------

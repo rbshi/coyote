@@ -156,6 +156,7 @@ package lynxTypes;
     parameter integer N_REG_ECI_S0 = 3;
     parameter integer N_REG_ECI_S1 = 2;
     parameter integer N_REG_DYN_DCPL = 4;
+    parameter integer N_REG_PR = 2;
 
     // Network
     parameter integer ARP_LUP_REQ_BITS = 32;
