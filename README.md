@@ -1,10 +1,12 @@
 <img src="img/coyote_logo.png" width = 220>
 
+[![Build benchmarks](https://github.com/fpgasystems/Coyote/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/fpgasystems/Coyote/actions/workflows/main.yml)
+
 ---
 
 ### _OS for FPGAs_
 
-Framework providing operating system abstractions and a range of shared networking (*RDMA*, *TCP/IP*) and memory services to common modern heterogeneuous platforms.
+Framework providing operating system abstractions and a range of shared networking (*RDMA*, *TCP/IP*) and memory services to common modern heterogeneous platforms.
 
 Some of the Coyote's features:
  * Multiple isolated virtualized vFPGA regions

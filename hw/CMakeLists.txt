@@ -52,6 +52,12 @@ set(DATA_WIDTH 64 CACHE STRING "Data width")
 set(CLOCK_PERIOD 3.2 CACHE STRING "Clock period.")
 
 ##
+## Custom scripts
+## 
+set(SHL_SCR_PATH 0 CACHE STRING "Custom shell script path.")
+set(SIM_SCR_PATH 0 CACHE STRING "Custom sim script path.")
+
+##
 ## DDR and HBM support
 ## ! u280 has both DDR and HBM, HBM enabled by def, if DDR is required add u280 in DDR_DEV and remove it from HBM_DEV
 ##
@@ -185,23 +191,7 @@ set(AXI_ID_BITS 1 CACHE STRING "Bitwidth of axi ar/aw_id")
 include(${CMAKE_SOURCE_DIR}/examples.cmake)
 
 ##
-## Quick validation checks
-##
-
-## General
-
-# Max supported regions (could be more if really needed with a bit of hacking)
-if(N_REGIONS GREATER 15)
-    message(FATAL_ERROR "Max 15 regions supported.")
-endif()
-
-# Number of configurations needs to be 1 without PR
-if(N_CONFIG GREATER 1 AND NOT EN_PR)
-    message(FATAL_ERROR "When PR is not enabled only one configuration of the system should exist.")
-endif()
-
-##
-## Network
+## Config
 ##
 
 # RDMA Bypass
@@ -497,18 +487,19 @@ configure_file(${CMAKE_SOURCE_DIR}/scripts/sim.tcl.in ${CMAKE_BINARY_DIR}/sim.tc
 # Base
 #
 
-add_custom_target(dynamic COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/dynamic.tcl -notrace)
-add_custom_target(sim COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/sim.tcl -notrace)
-add_custom_target(shell_only COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/shell.tcl -notrace)
 if(EN_NET)
-    add_custom_target(shell COMMAND make services COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/shell.tcl -notrace)
-else()
-    add_custom_target(shell COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/shell.tcl -notrace)
+    set(NET_CMD COMMAND make services)
 endif()
 if(EN_HLS)
-    message("** HLS compilation flow")
-    add_custom_target(compile COMMAND ${VIVADO_HLS_BINARY} -f comphls.tcl -tclargs ${target} COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/compile.tcl -notrace)
-else()
-message("** RTL compilation flow")
-    add_custom_target(compile COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/compile.tcl -notrace)
+    set(HLS_CMD COMMAND ${VIVADO_HLS_BINARY} -f comphls.tcl -tclargs ${target} COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/importhls.tcl -notrace)
 endif()
+
+add_custom_target(dynamic COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/dynamic.tcl -notrace)
+add_custom_target(sim COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/sim.tcl -notrace)
+add_custom_target(hls_only ${HLS_CMD})
+add_custom_target(net_only ${NET_CMD})
+add_custom_target(shell_only COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/shell.tcl -notrace)
+
+add_custom_target(shell ${NET_CMD} COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/shell.tcl -notrace)
+
+add_custom_target(compile ${HLS_CMD} COMMAND ${VIVADO_BINARY} -mode tcl -source ${CMAKE_BINARY_DIR}/compile.tcl -notrace)
