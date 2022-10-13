@@ -302,15 +302,15 @@ proc cr_bd_design_hbm { parentCell } {
  # ] $hresetn
 
 # HBM reference clock
-  set hrefclk [ create_bd_port -dir I -type clk -freq_hz 100000000 hrefclk ]
+  set hclk [ create_bd_port -dir I -type clk -freq_hz 100000000 hclk ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {100000000} \
- ] $hrefclk  
+ ] $hclk  
 
- set hrefresetn [ create_bd_port -dir I -type rst hrefresetn ]
+ set hresetn [ create_bd_port -dir I -type rst hresetn ]
   set_property -dict [ list \
    CONFIG.POLARITY {ACTIVE_LOW} \
- ] $hrefresetn
+ ] $hresetn
 
   set hbm_mc_init_seq_complete [ create_bd_port -dir O hbm_mc_init_seq_complete ]
   
@@ -336,7 +336,7 @@ proc cr_bd_design_hbm { parentCell } {
     CONFIG.USE_RESET {false} \
    ] \$clk_wiz_0"
    eval $cmd
-   connect_bd_net [get_bd_ports hrefclk] [get_bd_pins clk_wiz_0/clk_in1]
+   connect_bd_net [get_bd_ports hclk] [get_bd_pins clk_wiz_0/clk_in1]
    put get_bd_cells
 
   # Create instance: hbm_inst, and set properties
@@ -570,8 +570,8 @@ for {set i 0}  {$i < 32 - $cnfg(n_mem_chan)} {incr i} {
 
  # Create port connections
  connect_bd_net [get_bd_ports DRAM_STAT_CATTRIP] [get_bd_pins hbm_reset_sync_SLR0/aux_reset_in] [get_bd_pins util_vector_logic/Res]
- connect_bd_net [get_bd_ports hrefclk] [get_bd_pins axi_apb_bridge_inst/s_axi_aclk] [get_bd_pins hbm_inst/APB_0_PCLK] [get_bd_pins hbm_inst/APB_1_PCLK]
- connect_bd_net [get_bd_ports hrefresetn] [get_bd_pins axi_apb_bridge_inst/s_axi_aresetn] [get_bd_pins hbm_inst/APB_0_PRESET_N] [get_bd_pins hbm_inst/APB_1_PRESET_N]
+ connect_bd_net [get_bd_ports hclk] [get_bd_pins axi_apb_bridge_inst/s_axi_aclk] [get_bd_pins hbm_inst/APB_0_PCLK] [get_bd_pins hbm_inst/APB_1_PCLK]
+ connect_bd_net [get_bd_ports hresetn] [get_bd_pins axi_apb_bridge_inst/s_axi_aresetn] [get_bd_pins hbm_inst/APB_0_PRESET_N] [get_bd_pins hbm_inst/APB_1_PRESET_N]
  
  connect_bd_net [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins hbm_reset_sync_SLR0/slowest_sync_clk]
  for {set i 0}  {$i < 32} {incr i} {
@@ -586,7 +586,7 @@ for {set i 0}  {$i < 32 - $cnfg(n_mem_chan)} {incr i} {
  connect_bd_net [get_bd_ports DRAM_1_STAT_TEMP] [get_bd_pins hbm_inst/DRAM_1_STAT_TEMP]
  connect_bd_net [get_bd_pins hbm_inst/apb_complete_0] [get_bd_pins init_logic/In0]
  connect_bd_net [get_bd_pins hbm_inst/apb_complete_1] [get_bd_pins init_logic/In1]
- connect_bd_net [get_bd_ports hrefclk] [get_bd_pins hbm_inst/HBM_REF_CLK_0] [get_bd_pins hbm_inst/HBM_REF_CLK_1]
+ connect_bd_net [get_bd_ports hclk] [get_bd_pins hbm_inst/HBM_REF_CLK_0] [get_bd_pins hbm_inst/HBM_REF_CLK_1]
  
 
  for {set i 0}  {$i < 32} {incr i} {

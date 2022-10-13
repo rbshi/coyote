@@ -27,6 +27,11 @@ module design_dynamic_wrapper #(
     AXI4.m									m_axi_ddr [1+N_REGIONS],
     
 {% endif %}
+{% if cnfg.en_mem_bpss %}
+    // AXI4 DDR 
+    AXI4.m                                  m_axi_ddr [N_MEM_CHAN_USR],
+    
+{% endif %}
 {% if cnfg.en_strm %}
     // AXI4S host
     dmaIntf.m                               m_host_dma_rd_req,
@@ -1430,16 +1435,32 @@ module design_dynamic_wrapper #(
         .pf_irq(usr_irq)
 	);
 	
-	// ----------------------------------------------------------------------
-	// USER 
-	// ----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
+    // USER 
+    // ----------------------------------------------------------------------
 {% for i in range(0, cnfg.n_reg) %}
+{% if cnfg.apps == 'none' %}
     design_user_wrapper_{{ i }} inst_user_wrapper_{{ i }} ( 
+{% else %}
+{% if cnfg.n_reg == 1 %}
+    {{ cnfg.apps }}_{{ cnfg.apps_config }} inst_{{ cnfg.apps }} ( 
+{% else %}
+    {{ cnfg.apps }}_{{ cnfg.apps_config }} inst_{{ cnfg.apps }}_{{ i }} ( 
+{% endif %}
+{% endif %}
+{% if cnfg.apps == 'none' %}
         .axi_ctrl_araddr        (axi_ctrl_user_ul[{{ i }}].araddr),
+{% else %}
+        .axi_ctrl_araddr        (axi_ctrl_user_ul[{{ i }}].araddr[16-1:0]), // use LSBs (high-bits start with 0x8xxx)
+{% endif %}
         .axi_ctrl_arprot        (axi_ctrl_user_ul[{{ i }}].arprot),
         .axi_ctrl_arready       (axi_ctrl_user_ul[{{ i }}].arready),
         .axi_ctrl_arvalid       (axi_ctrl_user_ul[{{ i }}].arvalid),
+{% if cnfg.apps == 'none' %}
         .axi_ctrl_awaddr        (axi_ctrl_user_ul[{{ i }}].awaddr),
+{% else %}
+        .axi_ctrl_awaddr        (axi_ctrl_user_ul[{{ i }}].awaddr[16-1:0]),
+{% endif %}
         .axi_ctrl_awprot        (axi_ctrl_user_ul[{{ i }}].awprot),
         .axi_ctrl_awready       (axi_ctrl_user_ul[{{ i }}].awready),
         .axi_ctrl_awvalid       (axi_ctrl_user_ul[{{ i }}].awvalid),
@@ -1454,20 +1475,37 @@ module design_dynamic_wrapper #(
         .axi_ctrl_wready        (axi_ctrl_user_ul[{{ i }}].wready),
         .axi_ctrl_wstrb         (axi_ctrl_user_ul[{{ i }}].wstrb),
         .axi_ctrl_wvalid        (axi_ctrl_user_ul[{{ i }}].wvalid),
+
 {% if cnfg.en_bpss %}
-        .bpss_rd_req_valid	    (bpss_rd_req_ul[{{ i }}].valid),
-        .bpss_rd_req_ready	    (bpss_rd_req_ul[{{ i }}].ready),
-        .bpss_rd_req_data	    (bpss_rd_req_ul[{{ i }}].data),
-        .bpss_wr_req_valid	    (bpss_wr_req_ul[{{ i }}].valid),
-        .bpss_wr_req_ready	    (bpss_wr_req_ul[{{ i }}].ready),
-        .bpss_wr_req_data	    (bpss_wr_req_ul[{{ i }}].data),
-        .bpss_rd_done_valid     (bpss_rd_done_ul[{{ i }}].valid),
-        .bpss_rd_done_ready     (bpss_rd_done_ul[{{ i }}].ready),
-        .bpss_rd_done_data      (bpss_rd_done_ul[{{ i }}].data),
-        .bpss_wr_done_valid     (bpss_wr_done_ul[{{ i }}].valid),
-        .bpss_wr_done_ready     (bpss_wr_done_ul[{{ i }}].ready),
-        .bpss_wr_done_data      (bpss_wr_done_ul[{{ i }}].data),
-{% endif %}	
+{% if cnfg.apps == 'none' %}
+        .bpss_rd_req_valid        (bpss_rd_req_ul[{{ i }}].valid),
+        .bpss_rd_req_ready        (bpss_rd_req_ul[{{ i }}].ready),
+        .bpss_rd_req_data         (bpss_rd_req_ul[{{ i }}].data),
+        .bpss_wr_req_valid        (bpss_wr_req_ul[{{ i }}].valid),
+        .bpss_wr_req_ready        (bpss_wr_req_ul[{{ i }}].ready),
+        .bpss_wr_req_data         (bpss_wr_req_ul[{{ i }}].data),
+        .bpss_rd_done_valid       (bpss_rd_done_ul[{{ i }}].valid),
+        .bpss_rd_done_ready       (bpss_rd_done_ul[{{ i }}].ready),
+        .bpss_rd_done_data        (bpss_rd_done_ul[{{ i }}].data),
+        .bpss_wr_done_valid       (bpss_wr_done_ul[{{ i }}].valid),
+        .bpss_wr_done_ready       (bpss_wr_done_ul[{{ i }}].ready),
+        .bpss_wr_done_data        (bpss_wr_done_ul[{{ i }}].data),
+{% else %}
+        .hostd_bpss_rd_req_valid        (bpss_rd_req_ul[{{ i }}].valid),
+        .hostd_bpss_rd_req_ready        (bpss_rd_req_ul[{{ i }}].ready),
+        .hostd_bpss_rd_req_data     (bpss_rd_req_ul[{{ i }}].data),
+        .hostd_bpss_wr_req_valid        (bpss_wr_req_ul[{{ i }}].valid),
+        .hostd_bpss_wr_req_ready        (bpss_wr_req_ul[{{ i }}].ready),
+        .hostd_bpss_wr_req_data     (bpss_wr_req_ul[{{ i }}].data),
+        .hostd_bpss_rd_done_valid     (bpss_rd_done_ul[{{ i }}].valid),
+        .hostd_bpss_rd_done_ready     (bpss_rd_done_ul[{{ i }}].ready),
+        .hostd_bpss_rd_done_data      (bpss_rd_done_ul[{{ i }}].data),
+        .hostd_bpss_wr_done_valid     (bpss_wr_done_ul[{{ i }}].valid),
+        .hostd_bpss_wr_done_ready     (bpss_wr_done_ul[{{ i }}].ready),
+        .hostd_bpss_wr_done_data      (bpss_wr_done_ul[{{ i }}].data),
+{% endif %}
+{% endif %}
+{% if cnfg.apps == 'none' %}
 {% if cnfg.en_strm %}
         .axis_host_sink_tdata   (axis_host_in_ul[{{ i }}].tdata),
         .axis_host_sink_tkeep   (axis_host_in_ul[{{ i }}].tkeep),
@@ -1481,6 +1519,18 @@ module design_dynamic_wrapper #(
         .axis_host_src_tlast    (axis_host_out_ul[{{ i }}].tlast),
         .axis_host_src_tready   (axis_host_out_ul[{{ i }}].tready),
         .axis_host_src_tvalid   (axis_host_out_ul[{{ i }}].tvalid),
+{% else %}
+        .hostd_axis_host_sink_tdata   (axis_host_in_ul[{{ i }}].tdata),
+        .hostd_axis_host_sink_tkeep   (axis_host_in_ul[{{ i }}].tkeep),
+        .hostd_axis_host_sink_tlast   (axis_host_in_ul[{{ i }}].tlast),
+        .hostd_axis_host_sink_tready  (axis_host_in_ul[{{ i }}].tready),
+        .hostd_axis_host_sink_tvalid  (axis_host_in_ul[{{ i }}].tvalid),
+        .hostd_axis_host_src_tdata    (axis_host_out_ul[{{ i }}].tdata),
+        .hostd_axis_host_src_tkeep    (axis_host_out_ul[{{ i }}].tkeep),
+        .hostd_axis_host_src_tlast    (axis_host_out_ul[{{ i }}].tlast),
+        .hostd_axis_host_src_tready   (axis_host_out_ul[{{ i }}].tready),
+        .hostd_axis_host_src_tvalid   (axis_host_out_ul[{{ i }}].tvalid),
+{% endif %}
 {% endif %}
 {% if cnfg.en_mem %}
         .axis_card_sink_tdata   (axis_card_in_ul[{{ i }}].tdata),
@@ -1496,21 +1546,65 @@ module design_dynamic_wrapper #(
         .axis_card_src_tready   (axis_card_out_ul[{{ i }}].tready),
         .axis_card_src_tvalid   (axis_card_out_ul[{{ i }}].tvalid),
 {% endif %}
+{% if cnfg.en_mem_bpss %}
+    {% for j in range(0, cnfg.n_mem_chan_usr) %}
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_araddr(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].araddr),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arburst(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arburst),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arcache(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arcache),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arlen(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arlen),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arlock(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arlock),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arprot(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arprot),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arqos(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arqos),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arready(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arready),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arregion(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arregion),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arsize(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arsize),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_arvalid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].arvalid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awaddr(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awaddr),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awburst(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awburst),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awcache(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awcache),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awlen(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awlen),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awlock(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awlock),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awprot(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awprot),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awqos(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awqos),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awready(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awready),
+        //.axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awregion(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awregion),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awsize(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awsize),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_awvalid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].awvalid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_bid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].bid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_bready(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].bready),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_bresp(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].bresp),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_bvalid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].bvalid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rdata(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rdata),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rlast(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rlast),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rready(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rready),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rresp(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rresp),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_rvalid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].rvalid),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_wdata(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].wdata),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_wlast(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].wlast),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_wready(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].wready),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_wstrb(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].wstrb),
+        .axi_mem_{{ i*cnfg.n_mem_chan_usr+j }}_wvalid(m_axi_ddr[{{ i*cnfg.n_mem_chan_usr+j }}].wvalid),
+    {% endfor %}
+{% endif %}
 {% if cnfg.en_rdma_0 %}
-    {% if cnfg.en_rpc %}
-        .rdma_0_sq_valid	    (rdma_0_sq_user_ul[{{ i }}].valid),
-        .rdma_0_sq_ready	    (rdma_0_sq_user_ul[{{ i }}].ready),
-        .rdma_0_sq_data	        (rdma_0_sq_user_ul[{{ i }}].data),
-        .rdma_0_ack_valid	    (rdma_0_ack_user_ul[{{ i }}].valid),
-        .rdma_0_ack_ready	    (rdma_0_ack_user_ul[{{ i }}].ready),
-        .rdma_0_ack_data	    (rdma_0_ack_user_ul[{{ i }}].data),
-    {% endif %}
-        .rdma_0_rd_req_valid	(rdma_0_rd_req_ul[{{ i }}].valid),
-        .rdma_0_rd_req_ready	(rdma_0_rd_req_ul[{{ i }}].ready),
-        .rdma_0_rd_req_data	    (rdma_0_rd_req_ul[{{ i }}].data),
-        .rdma_0_wr_req_valid	(rdma_0_wr_req_ul[{{ i }}].valid),
-        .rdma_0_wr_req_ready	(rdma_0_wr_req_ul[{{ i }}].ready),
-        .rdma_0_wr_req_data	    (rdma_0_wr_req_ul[{{ i }}].data),
+        .rdma_0_rd_req_valid    (rdma_0_rd_req_ul[{{ i }}].valid),
+        .rdma_0_rd_req_ready    (rdma_0_rd_req_ul[{{ i }}].ready),
+        .rdma_0_rd_req_data     (rdma_0_rd_req_ul[{{ i }}].data),
+        .rdma_0_wr_req_valid    (rdma_0_wr_req_ul[{{ i }}].valid),
+        .rdma_0_wr_req_ready    (rdma_0_wr_req_ul[{{ i }}].ready),
+        .rdma_0_wr_req_data     (rdma_0_wr_req_ul[{{ i }}].data),
+        {% if cnfg.en_rpc %}
+        .rdma_0_sq_valid        (rdma_0_sq_user_ul[{{ i }}].valid),
+        .rdma_0_sq_ready        (rdma_0_sq_user_ul[{{ i }}].ready),
+        .rdma_0_sq_data         (rdma_0_sq_user_ul[{{ i }}].data),
+        .rdma_0_ack_valid       (rdma_0_ack_user_ul[{{ i }}].valid),
+        .rdma_0_ack_ready       (rdma_0_ack_user_ul[{{ i }}].ready),
+        .rdma_0_ack_data        (rdma_0_ack_user_ul[{{ i }}].data),
+        {% endif %}
+{% if cnfg.apps == 'none' %}
         .axis_rdma_0_sink_tdata  (axis_rdma_0_in_ul[{{ i }}].tdata),
         .axis_rdma_0_sink_tkeep  (axis_rdma_0_in_ul[{{ i }}].tkeep),
         .axis_rdma_0_sink_tid    (axis_rdma_0_in_ul[{{ i }}].tid),
@@ -1523,22 +1617,35 @@ module design_dynamic_wrapper #(
         .axis_rdma_0_src_tlast   (axis_rdma_0_out_ul[{{ i }}].tlast),
         .axis_rdma_0_src_tready  (axis_rdma_0_out_ul[{{ i }}].tready),
         .axis_rdma_0_src_tvalid  (axis_rdma_0_out_ul[{{ i }}].tvalid),
+{% else %}
+        .rdma_0_axis_sink_tdata  (axis_rdma_0_in_ul[{{ i }}].tdata),
+        .rdma_0_axis_sink_tkeep  (axis_rdma_0_in_ul[{{ i }}].tkeep),
+        .rdma_0_axis_sink_tlast  (axis_rdma_0_in_ul[{{ i }}].tlast),
+        .rdma_0_axis_sink_tready (axis_rdma_0_in_ul[{{ i }}].tready),
+        .rdma_0_axis_sink_tvalid (axis_rdma_0_in_ul[{{ i }}].tvalid),
+        .rdma_0_axis_src_tdata   (axis_rdma_0_out_ul[{{ i }}].tdata),
+        .rdma_0_axis_src_tkeep   (axis_rdma_0_out_ul[{{ i }}].tkeep),
+        .rdma_0_axis_src_tlast   (axis_rdma_0_out_ul[{{ i }}].tlast),
+        .rdma_0_axis_src_tready  (axis_rdma_0_out_ul[{{ i }}].tready),
+        .rdma_0_axis_src_tvalid  (axis_rdma_0_out_ul[{{ i }}].tvalid),
+{% endif %}
 {% endif %}
 {% if cnfg.en_rdma_1 %}
-    {% if cnfg.en_rpc %}
-        .rdma_1_sq_valid	    (rdma_1_sq_user_ul[{{ i }}].valid),
-        .rdma_1_sq_ready	    (rdma_1_sq_user_ul[{{ i }}].ready),
-        .rdma_1_sq_data	        (rdma_1_sq_user_ul[{{ i }}].data),
-        .rdma_1_ack_valid	    (rdma_1_ack_user_ul[{{ i }}].valid),
-        .rdma_1_ack_ready	    (rdma_1_ack_user_ul[{{ i }}].ready),
-        .rdma_1_ack_data	    (rdma_1_ack_user_ul[{{ i }}].data),
-    {% endif %}
-        .rdma_1_rd_req_valid	(rdma_1_rd_req_ul[{{ i }}].valid),
-        .rdma_1_rd_req_ready	(rdma_1_rd_req_ul[{{ i }}].ready),
-        .rdma_1_rd_req_data	    (rdma_1_rd_req_ul[{{ i }}].data),
-        .rdma_1_wr_req_valid	(rdma_1_wr_req_ul[{{ i }}].valid),
-        .rdma_1_wr_req_ready	(rdma_1_wr_req_ul[{{ i }}].ready),
-        .rdma_1_wr_req_data	    (rdma_1_wr_req_ul[{{ i }}].data),
+        .rdma_1_rd_req_valid    (rdma_1_rd_req_ul[{{ i }}].valid),
+        .rdma_1_rd_req_ready    (rdma_1_rd_req_ul[{{ i }}].ready),
+        .rdma_1_rd_req_data     (rdma_1_rd_req_ul[{{ i }}].data),
+        .rdma_1_wr_req_valid    (rdma_1_wr_req_ul[{{ i }}].valid),
+        .rdma_1_wr_req_ready    (rdma_1_wr_req_ul[{{ i }}].ready),
+        .rdma_1_wr_req_data     (rdma_1_wr_req_ul[{{ i }}].data),
+        {% if cnfg.en_rpc %}
+        .rdma_1_sq_valid        (rdma_1_sq_user_ul[{{ i }}].valid),
+        .rdma_1_sq_ready        (rdma_1_sq_user_ul[{{ i }}].ready),
+        .rdma_1_sq_data         (rdma_1_sq_user_ul[{{ i }}].data),
+        .rdma_1_ack_valid       (rdma_1_ack_user_ul[{{ i }}].valid),
+        .rdma_1_ack_ready       (rdma_1_ack_user_ul[{{ i }}].ready),
+        .rdma_1_ack_data        (rdma_1_ack_user_ul[{{ i }}].data),
+        {% endif %}
+{% if cnfg.apps == 'none' %}        
         .axis_rdma_1_sink_tdata  (axis_rdma_1_in_ul[{{ i }}].tdata),
         .axis_rdma_1_sink_tkeep  (axis_rdma_1_in_ul[{{ i }}].tkeep),
         .axis_rdma_1_sink_tid    (axis_rdma_1_in_ul[{{ i }}].tid),
@@ -1551,38 +1658,51 @@ module design_dynamic_wrapper #(
         .axis_rdma_1_src_tlast   (axis_rdma_1_out_ul[{{ i }}].tlast),
         .axis_rdma_1_src_tready  (axis_rdma_1_out_ul[{{ i }}].tready),
         .axis_rdma_1_src_tvalid  (axis_rdma_1_out_ul[{{ i }}].tvalid),
+{% else %}
+        .rdma_1_axis_sink_tdata  (axis_rdma_1_in_ul[{{ i }}].tdata),
+        .rdma_1_axis_sink_tkeep  (axis_rdma_1_in_ul[{{ i }}].tkeep),
+        .rdma_1_axis_sink_tlast  (axis_rdma_1_in_ul[{{ i }}].tlast),
+        .rdma_1_axis_sink_tready (axis_rdma_1_in_ul[{{ i }}].tready),
+        .rdma_1_axis_sink_tvalid (axis_rdma_1_in_ul[{{ i }}].tvalid),
+        .rdma_1_axis_src_tdata   (axis_rdma_1_out_ul[{{ i }}].tdata),
+        .rdma_1_axis_src_tkeep   (axis_rdma_1_out_ul[{{ i }}].tkeep),
+        .rdma_1_axis_src_tlast   (axis_rdma_1_out_ul[{{ i }}].tlast),
+        .rdma_1_axis_src_tready  (axis_rdma_1_out_ul[{{ i }}].tready),
+        .rdma_1_axis_src_tvalid  (axis_rdma_1_out_ul[{{ i }}].tvalid),
+{% endif %}
 {% endif %}
 {% if cnfg.en_tcp_0 %}
-        .tcp_0_listen_req_valid	(tcp_0_listen_req_ul[{{ i }}].valid),
-        .tcp_0_listen_req_ready	(tcp_0_listen_req_ul[{{ i }}].ready),
-        .tcp_0_listen_req_data	(tcp_0_listen_req_ul[{{ i }}].data),
-        .tcp_0_listen_rsp_valid	(tcp_0_listen_rsp_ul[{{ i }}].valid),
-        .tcp_0_listen_rsp_ready	(tcp_0_listen_rsp_ul[{{ i }}].ready),
-        .tcp_0_listen_rsp_data	(tcp_0_listen_rsp_ul[{{ i }}].data),
-        .tcp_0_open_req_valid	(tcp_0_open_req_ul[{{ i }}].valid),
-        .tcp_0_open_req_ready	(tcp_0_open_req_ul[{{ i }}].ready),
-        .tcp_0_open_req_data	(tcp_0_open_req_ul[{{ i }}].data),
-        .tcp_0_open_rsp_valid	(tcp_0_open_rsp_ul[{{ i }}].valid),
-        .tcp_0_open_rsp_ready	(tcp_0_open_rsp_ul[{{ i }}].ready),
-        .tcp_0_open_rsp_data	(tcp_0_open_rsp_ul[{{ i }}].data),
-        .tcp_0_close_req_valid	(tcp_0_close_req_ul[{{ i }}].valid),
-        .tcp_0_close_req_ready	(tcp_0_close_req_ul[{{ i }}].ready),
-        .tcp_0_close_req_data	(tcp_0_close_req_ul[{{ i }}].data),
-        .tcp_0_notify_valid		(tcp_0_notify_ul[{{ i }}].valid),
-        .tcp_0_notify_ready		(tcp_0_notify_ul[{{ i }}].ready),
-        .tcp_0_notify_data		(tcp_0_notify_ul[{{ i }}].data),
-        .tcp_0_rd_pkg_valid	    (tcp_0_rd_pkg_ul[{{ i }}].valid),
-        .tcp_0_rd_pkg_ready	    (tcp_0_rd_pkg_ul[{{ i }}].ready),
-        .tcp_0_rd_pkg_data	    (tcp_0_rd_pkg_ul[{{ i }}].data),
-        .tcp_0_rx_meta_valid	(tcp_0_rx_meta_ul[{{ i }}].valid),
-        .tcp_0_rx_meta_ready	(tcp_0_rx_meta_ul[{{ i }}].ready),
-        .tcp_0_rx_meta_data		(tcp_0_rx_meta_ul[{{ i }}].data),
-        .tcp_0_tx_meta_valid	(tcp_0_tx_meta_ul[{{ i }}].valid),
-        .tcp_0_tx_meta_ready	(tcp_0_tx_meta_ul[{{ i }}].ready),
-        .tcp_0_tx_meta_data		(tcp_0_tx_meta_ul[{{ i }}].data),
-        .tcp_0_tx_stat_valid	(tcp_0_tx_stat_ul[{{ i }}].valid),
-        .tcp_0_tx_stat_ready	(tcp_0_tx_stat_ul[{{ i }}].ready),
-        .tcp_0_tx_stat_data		(tcp_0_tx_stat_ul[{{ i }}].data),
+        .tcp_0_listen_req_valid (tcp_0_listen_req_ul[{{ i }}].valid),
+        .tcp_0_listen_req_ready (tcp_0_listen_req_ul[{{ i }}].ready),
+        .tcp_0_listen_req_data  (tcp_0_listen_req_ul[{{ i }}].data),
+        .tcp_0_listen_rsp_valid (tcp_0_listen_rsp_ul[{{ i }}].valid),
+        .tcp_0_listen_rsp_ready (tcp_0_listen_rsp_ul[{{ i }}].ready),
+        .tcp_0_listen_rsp_data  (tcp_0_listen_rsp_ul[{{ i }}].data),
+        .tcp_0_open_req_valid   (tcp_0_open_req_ul[{{ i }}].valid),
+        .tcp_0_open_req_ready   (tcp_0_open_req_ul[{{ i }}].ready),
+        .tcp_0_open_req_data    (tcp_0_open_req_ul[{{ i }}].data),
+        .tcp_0_open_rsp_valid   (tcp_0_open_rsp_ul[{{ i }}].valid),
+        .tcp_0_open_rsp_ready   (tcp_0_open_rsp_ul[{{ i }}].ready),
+        .tcp_0_open_rsp_data    (tcp_0_open_rsp_ul[{{ i }}].data),
+        .tcp_0_close_req_valid  (tcp_0_close_req_ul[{{ i }}].valid),
+        .tcp_0_close_req_ready  (tcp_0_close_req_ul[{{ i }}].ready),
+        .tcp_0_close_req_data   (tcp_0_close_req_ul[{{ i }}].data),
+        .tcp_0_notify_valid     (tcp_0_notify_ul[{{ i }}].valid),
+        .tcp_0_notify_ready     (tcp_0_notify_ul[{{ i }}].ready),
+        .tcp_0_notify_data      (tcp_0_notify_ul[{{ i }}].data),
+        .tcp_0_rd_pkg_valid     (tcp_0_rd_pkg_ul[{{ i }}].valid),
+        .tcp_0_rd_pkg_ready     (tcp_0_rd_pkg_ul[{{ i }}].ready),
+        .tcp_0_rd_pkg_data      (tcp_0_rd_pkg_ul[{{ i }}].data),
+        .tcp_0_rx_meta_valid    (tcp_0_rx_meta_ul[{{ i }}].valid),
+        .tcp_0_rx_meta_ready    (tcp_0_rx_meta_ul[{{ i }}].ready),
+        .tcp_0_rx_meta_data     (tcp_0_rx_meta_ul[{{ i }}].data),
+        .tcp_0_tx_meta_valid    (tcp_0_tx_meta_ul[{{ i }}].valid),
+        .tcp_0_tx_meta_ready    (tcp_0_tx_meta_ul[{{ i }}].ready),
+        .tcp_0_tx_meta_data     (tcp_0_tx_meta_ul[{{ i }}].data),
+        .tcp_0_tx_stat_valid    (tcp_0_tx_stat_ul[{{ i }}].valid),
+        .tcp_0_tx_stat_ready    (tcp_0_tx_stat_ul[{{ i }}].ready),
+        .tcp_0_tx_stat_data     (tcp_0_tx_stat_ul[{{ i }}].data),
+{% if cnfg.apps == 'none' %}
         .axis_tcp_0_sink_tdata    (axis_tcp_0_in_ul[{{ i }}].tdata),
         .axis_tcp_0_sink_tkeep    (axis_tcp_0_in_ul[{{ i }}].tkeep),
         .axis_tcp_0_sink_tid      (axis_tcp_0_in_ul[{{ i }}].tid),
@@ -1595,38 +1715,51 @@ module design_dynamic_wrapper #(
         .axis_tcp_0_src_tlast     (axis_tcp_0_out_ul[{{ i }}].tlast),
         .axis_tcp_0_src_tready    (axis_tcp_0_out_ul[{{ i }}].tready),
         .axis_tcp_0_src_tvalid    (axis_tcp_0_out_ul[{{ i }}].tvalid),
+{% else %}
+        .tcp_0_axis_sink_tdata    (axis_tcp_0_in_ul[{{ i }}].tdata),
+        .tcp_0_axis_sink_tkeep    (axis_tcp_0_in_ul[{{ i }}].tkeep),
+        .tcp_0_axis_sink_tlast    (axis_tcp_0_in_ul[{{ i }}].tlast),
+        .tcp_0_axis_sink_tready   (axis_tcp_0_in_ul[{{ i }}].tready),
+        .tcp_0_axis_sink_tvalid   (axis_tcp_0_in_ul[{{ i }}].tvalid),
+        .tcp_0_axis_src_tdata     (axis_tcp_0_out_ul[{{ i }}].tdata),
+        .tcp_0_axis_src_tkeep     (axis_tcp_0_out_ul[{{ i }}].tkeep),
+        .tcp_0_axis_src_tlast     (axis_tcp_0_out_ul[{{ i }}].tlast),
+        .tcp_0_axis_src_tready    (axis_tcp_0_out_ul[{{ i }}].tready),
+        .tcp_0_axis_src_tvalid    (axis_tcp_0_out_ul[{{ i }}].tvalid),
+{% endif %}
 {% endif %}
 {% if cnfg.en_tcp_1 %}
-        .tcp_1_listen_req_valid	(tcp_1_listen_req_ul[{{ i }}].valid),
-        .tcp_1_listen_req_ready	(tcp_1_listen_req_ul[{{ i }}].ready),
-        .tcp_1_listen_req_data	(tcp_1_listen_req_ul[{{ i }}].data),
-        .tcp_1_listen_rsp_valid	(tcp_1_listen_rsp_ul[{{ i }}].valid),
-        .tcp_1_listen_rsp_ready	(tcp_1_listen_rsp_ul[{{ i }}].ready),
-        .tcp_1_listen_rsp_data	(tcp_1_listen_rsp_ul[{{ i }}].data),
-        .tcp_1_open_req_valid	(tcp_1_open_req_ul[{{ i }}].valid),
-        .tcp_1_open_req_ready	(tcp_1_open_req_ul[{{ i }}].ready),
-        .tcp_1_open_req_data	(tcp_1_open_req_ul[{{ i }}].data),
-        .tcp_1_open_rsp_valid	(tcp_1_open_rsp_ul[{{ i }}].valid),
-        .tcp_1_open_rsp_ready	(tcp_1_open_rsp_ul[{{ i }}].ready),
-        .tcp_1_open_rsp_data	(tcp_1_open_rsp_ul[{{ i }}].data),
-        .tcp_1_close_req_valid	(tcp_1_close_req_ul[{{ i }}].valid),
-        .tcp_1_close_req_ready	(tcp_1_close_req_ul[{{ i }}].ready),
-        .tcp_1_close_req_data	(tcp_1_close_req_ul[{{ i }}].data),
-        .tcp_1_notify_valid		(tcp_1_notify_ul[{{ i }}].valid),
-        .tcp_1_notify_ready		(tcp_1_notify_ul[{{ i }}].ready),
-        .tcp_1_notify_data		(tcp_1_notify_ul[{{ i }}].data),
-        .tcp_1_rd_pkg_valid	    (tcp_1_rd_pkg_ul[{{ i }}].valid),
-        .tcp_1_rd_pkg_ready	    (tcp_1_rd_pkg_ul[{{ i }}].ready),
-        .tcp_1_rd_pkg_data	    (tcp_1_rd_pkg_ul[{{ i }}].data),
-        .tcp_1_rx_meta_valid	(tcp_1_rx_meta_ul[{{ i }}].valid),
-        .tcp_1_rx_meta_ready	(tcp_1_rx_meta_ul[{{ i }}].ready),
-        .tcp_1_rx_meta_data		(tcp_1_rx_meta_ul[{{ i }}].data),
-        .tcp_1_tx_meta_valid	(tcp_1_tx_meta_ul[{{ i }}].valid),
-        .tcp_1_tx_meta_ready	(tcp_1_tx_meta_ul[{{ i }}].ready),
-        .tcp_1_tx_meta_data		(tcp_1_tx_meta_ul[{{ i }}].data),
-        .tcp_1_tx_stat_valid	(tcp_1_tx_stat_ul[{{ i }}].valid),
-        .tcp_1_tx_stat_ready	(tcp_1_tx_stat_ul[{{ i }}].ready),
-        .tcp_1_tx_stat_data		(tcp_1_tx_stat_ul[{{ i }}].data),
+        .tcp_1_listen_req_valid (tcp_1_listen_req_ul[{{ i }}].valid),
+        .tcp_1_listen_req_ready (tcp_1_listen_req_ul[{{ i }}].ready),
+        .tcp_1_listen_req_data  (tcp_1_listen_req_ul[{{ i }}].data),
+        .tcp_1_listen_rsp_valid (tcp_1_listen_rsp_ul[{{ i }}].valid),
+        .tcp_1_listen_rsp_ready (tcp_1_listen_rsp_ul[{{ i }}].ready),
+        .tcp_1_listen_rsp_data  (tcp_1_listen_rsp_ul[{{ i }}].data),
+        .tcp_1_open_req_valid   (tcp_1_open_req_ul[{{ i }}].valid),
+        .tcp_1_open_req_ready   (tcp_1_open_req_ul[{{ i }}].ready),
+        .tcp_1_open_req_data    (tcp_1_open_req_ul[{{ i }}].data),
+        .tcp_1_open_rsp_valid   (tcp_1_open_rsp_ul[{{ i }}].valid),
+        .tcp_1_open_rsp_ready   (tcp_1_open_rsp_ul[{{ i }}].ready),
+        .tcp_1_open_rsp_data    (tcp_1_open_rsp_ul[{{ i }}].data),
+        .tcp_1_close_req_valid  (tcp_1_close_req_ul[{{ i }}].valid),
+        .tcp_1_close_req_ready  (tcp_1_close_req_ul[{{ i }}].ready),
+        .tcp_1_close_req_data   (tcp_1_close_req_ul[{{ i }}].data),
+        .tcp_1_notify_valid     (tcp_1_notify_ul[{{ i }}].valid),
+        .tcp_1_notify_ready     (tcp_1_notify_ul[{{ i }}].ready),
+        .tcp_1_notify_data      (tcp_1_notify_ul[{{ i }}].data),
+        .tcp_1_rd_pkg_valid     (tcp_1_rd_pkg_ul[{{ i }}].valid),
+        .tcp_1_rd_pkg_ready     (tcp_1_rd_pkg_ul[{{ i }}].ready),
+        .tcp_1_rd_pkg_data      (tcp_1_rd_pkg_ul[{{ i }}].data),
+        .tcp_1_rx_meta_valid    (tcp_1_rx_meta_ul[{{ i }}].valid),
+        .tcp_1_rx_meta_ready    (tcp_1_rx_meta_ul[{{ i }}].ready),
+        .tcp_1_rx_meta_data     (tcp_1_rx_meta_ul[{{ i }}].data),
+        .tcp_1_tx_meta_valid    (tcp_1_tx_meta_ul[{{ i }}].valid),
+        .tcp_1_tx_meta_ready    (tcp_1_tx_meta_ul[{{ i }}].ready),
+        .tcp_1_tx_meta_data     (tcp_1_tx_meta_ul[{{ i }}].data),
+        .tcp_1_tx_stat_valid    (tcp_1_tx_stat_ul[{{ i }}].valid),
+        .tcp_1_tx_stat_ready    (tcp_1_tx_stat_ul[{{ i }}].ready),
+        .tcp_1_tx_stat_data     (tcp_1_tx_stat_ul[{{ i }}].data),
+{% if cnfg.apps == 'none' %}
         .axis_tcp_1_sink_tdata    (axis_tcp_1_in_ul[{{ i }}].tdata),
         .axis_tcp_1_sink_tkeep    (axis_tcp_1_in_ul[{{ i }}].tkeep),
         .axis_tcp_1_sink_tid      (axis_tcp_1_in_ul[{{ i }}].tid),
@@ -1639,13 +1772,20 @@ module design_dynamic_wrapper #(
         .axis_tcp_1_src_tlast     (axis_tcp_1_out_ul[{{ i }}].tlast),
         .axis_tcp_1_src_tready    (axis_tcp_1_out_ul[{{ i }}].tready),
         .axis_tcp_1_src_tvalid    (axis_tcp_1_out_ul[{{ i }}].tvalid),
-{% endif %}
-{% if cnfg.en_uclk %}
-        .aclk                   (uclk),
-        .aresetn                (uresetn),
 {% else %}
-        .aclk                   (aclk),
-        .aresetn                (aresetn),
+        .tcp_1_axis_sink_tdata    (axis_tcp_1_in_ul[{{ i }}].tdata),
+        .tcp_1_axis_sink_tkeep    (axis_tcp_1_in_ul[{{ i }}].tkeep),
+        .tcp_1_axis_sink_tlast    (axis_tcp_1_in_ul[{{ i }}].tlast),
+        .tcp_1_axis_sink_tready   (axis_tcp_1_in_ul[{{ i }}].tready),
+        .tcp_1_axis_sink_tvalid   (axis_tcp_1_in_ul[{{ i }}].tvalid),
+        .tcp_1_axis_src_tdata     (axis_tcp_1_out_ul[{{ i }}].tdata),
+        .tcp_1_axis_src_tkeep     (axis_tcp_1_out_ul[{{ i }}].tkeep),
+        .tcp_1_axis_src_tlast     (axis_tcp_1_out_ul[{{ i }}].tlast),
+        .tcp_1_axis_src_tready    (axis_tcp_1_out_ul[{{ i }}].tready),
+        .tcp_1_axis_src_tvalid    (axis_tcp_1_out_ul[{{ i }}].tvalid),
+{% endif %}
+{% endif %}
+{% if cnfg.apps == 'none' %}
         .S_BSCAN_drck(),
         .S_BSCAN_shift(),
         .S_BSCAN_tdi(),
@@ -1657,7 +1797,22 @@ module design_dynamic_wrapper #(
         .S_BSCAN_runtest(),
         .S_BSCAN_reset(),
         .S_BSCAN_capture(),
-        .S_BSCAN_bscanid_en()  
+        .S_BSCAN_bscanid_en(),
+{% if cnfg.en_uclk %}
+        .aclk                   (uclk),
+        .aresetn                (uresetn)
+{% else %}
+        .aclk                   (aclk),
+        .aresetn                (aresetn)
+{% endif %}
+{% else %}
+{% if cnfg.en_uclk %}
+        .clk                   (uclk),
+        .resetn                (uresetn)
+{% else %}
+        .clk                   (aclk),
+        .resetn                (aresetn)
+{% endif %}
 {% endif %}
     );
 
