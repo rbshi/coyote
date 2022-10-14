@@ -1396,16 +1396,16 @@ module design_dynamic_wrapper #(
 		.m_rdma_0_sq(rdma_0_sq_host_s1),
         .s_rdma_0_ack(rdma_0_ack_host_s1),
 {% if cnfg.en_rpc %}
-        .s_rdma_0_sq(rdma_0_sq_user_s2),
-        .m_rdma_0_ack(rdma_0_ack_user_s2),
+        .s_rdma_0_sq(rdma_0_sq_user_s1),
+        .m_rdma_0_ack(rdma_0_ack_user_s1),
 {% endif %}	
 {% endif %}	
 {% if cnfg.en_rdma_1 %}
 		.m_rdma_1_sq(rdma_1_sq_host_s1),
         .s_rdma_1_ack(rdma_1_ack_host_s1),
 {% if cnfg.en_rpc %}
-        .s_rdma_1_sq(rdma_1_sq_user_s2),
-        .m_rdma_1_ack(rdma_1_ack_user_s2),
+        .s_rdma_1_sq(rdma_1_sq_user_s1),
+        .m_rdma_1_ack(rdma_1_ack_user_s1),
 {% endif %}	
 {% endif %}	
 {% if cnfg.en_strm %}
@@ -1600,9 +1600,12 @@ module design_dynamic_wrapper #(
         .rdma_0_sq_valid        (rdma_0_sq_user_ul[{{ i }}].valid),
         .rdma_0_sq_ready        (rdma_0_sq_user_ul[{{ i }}].ready),
         .rdma_0_sq_data         (rdma_0_sq_user_ul[{{ i }}].data),
-        .rdma_0_ack_valid       (rdma_0_ack_user_ul[{{ i }}].valid),
-        .rdma_0_ack_ready       (rdma_0_ack_user_ul[{{ i }}].ready),
-        .rdma_0_ack_data        (rdma_0_ack_user_ul[{{ i }}].data),
+        //.rdma_0_ack_valid       (rdma_0_ack_user_ul[{{ i }}].valid),
+        //.rdma_0_ack_ready       (rdma_0_ack_user_ul[{{ i }}].ready),
+        //.rdma_0_ack_data        (rdma_0_ack_user_ul[{{ i }}].data),
+        .rdma_0_ack_valid       (),
+        .rdma_0_ack_ready       (1'b1),
+        .rdma_0_ack_data        (),
         {% endif %}
 {% if cnfg.apps == 'none' %}
         .axis_rdma_0_sink_tdata  (axis_rdma_0_in_ul[{{ i }}].tdata),
@@ -1641,9 +1644,12 @@ module design_dynamic_wrapper #(
         .rdma_1_sq_valid        (rdma_1_sq_user_ul[{{ i }}].valid),
         .rdma_1_sq_ready        (rdma_1_sq_user_ul[{{ i }}].ready),
         .rdma_1_sq_data         (rdma_1_sq_user_ul[{{ i }}].data),
-        .rdma_1_ack_valid       (rdma_1_ack_user_ul[{{ i }}].valid),
-        .rdma_1_ack_ready       (rdma_1_ack_user_ul[{{ i }}].ready),
-        .rdma_1_ack_data        (rdma_1_ack_user_ul[{{ i }}].data),
+        //.rdma_1_ack_valid       (rdma_1_ack_user_ul[{{ i }}].valid),
+        //.rdma_1_ack_ready       (rdma_1_ack_user_ul[{{ i }}].ready),
+        //.rdma_1_ack_data        (rdma_1_ack_user_ul[{{ i }}].data),
+        .rdma_1_ack_valid       (),
+        .rdma_1_ack_ready       (1'b1),
+        .rdma_1_ack_data        (),
         {% endif %}
 {% if cnfg.apps == 'none' %}        
         .axis_rdma_1_sink_tdata  (axis_rdma_1_in_ul[{{ i }}].tdata),
