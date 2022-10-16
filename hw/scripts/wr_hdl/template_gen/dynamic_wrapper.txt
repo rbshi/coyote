@@ -1302,6 +1302,15 @@ module design_dynamic_wrapper #(
 {% endif %}	
 
     for(genvar i = 0; i < N_REGIONS; i++) begin
+{% if cnfg.en_uclk %}
+        axil_reg_array #(.N_STAGES(N_REG_DYN_HOST_S0)) (.aclk(uclk), .aresetn(uresetn), .s_axi(axi_ctrl_user_s0[i]), .m_axi(axi_ctrl_user_s1[i]));
+{% if cnfg.en_bpss %}
+        meta_reg_array #(.DATA_BITS($bits(req_t)), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(uclk), .aresetn(uresetn), .s_meta(bpss_rd_req_s1[i]), .m_meta(bpss_rd_req_s0[i]));
+        meta_reg_array #(.DATA_BITS($bits(req_t)), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(uclk), .aresetn(uresetn), .s_meta(bpss_wr_req_s1[i]), .m_meta(bpss_wr_req_s0[i]));
+        meta_reg_array #(.DATA_BITS(PID_BITS), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(uclk), .aresetn(uresetn), .s_meta(bpss_rd_done_s0[i]), .m_meta(bpss_rd_done_s1[i]));
+        meta_reg_array #(.DATA_BITS(PID_BITS), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(uclk), .aresetn(uresetn), .s_meta(bpss_wr_done_s0[i]), .m_meta(bpss_wr_done_s1[i]));
+{% endif %} 
+{% else %}
         axil_reg_array #(.N_STAGES(N_REG_DYN_HOST_S0)) (.aclk(aclk), .aresetn(aresetn), .s_axi(axi_ctrl_user_s0[i]), .m_axi(axi_ctrl_user_s1[i]));
 {% if cnfg.en_bpss %}
         meta_reg_array #(.DATA_BITS($bits(req_t)), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(aclk), .aresetn(aresetn), .s_meta(bpss_rd_req_s1[i]), .m_meta(bpss_rd_req_s0[i]));
@@ -1309,6 +1318,8 @@ module design_dynamic_wrapper #(
         meta_reg_array #(.DATA_BITS(PID_BITS), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(aclk), .aresetn(aresetn), .s_meta(bpss_rd_done_s0[i]), .m_meta(bpss_rd_done_s1[i]));
         meta_reg_array #(.DATA_BITS(PID_BITS), .N_STAGES(N_REG_DYN_HOST_S1)) (.aclk(aclk), .aresetn(aresetn), .s_meta(bpss_wr_done_s0[i]), .m_meta(bpss_wr_done_s1[i]));
 {% endif %}	
+{% endif %} 
+
     end	
 
 	// Decoupling 
