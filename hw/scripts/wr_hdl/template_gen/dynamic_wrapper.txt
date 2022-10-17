@@ -1530,6 +1530,7 @@ module design_dynamic_wrapper #(
         .axis_host_src_tlast    (axis_host_out_ul[{{ i }}].tlast),
         .axis_host_src_tready   (axis_host_out_ul[{{ i }}].tready),
         .axis_host_src_tvalid   (axis_host_out_ul[{{ i }}].tvalid),
+{% endif %}
 {% else %}
         .hostd_axis_host_sink_tdata   (axis_host_in_ul[{{ i }}].tdata),
         .hostd_axis_host_sink_tkeep   (axis_host_in_ul[{{ i }}].tkeep),
@@ -1541,7 +1542,6 @@ module design_dynamic_wrapper #(
         .hostd_axis_host_src_tlast    (axis_host_out_ul[{{ i }}].tlast),
         .hostd_axis_host_src_tready   (axis_host_out_ul[{{ i }}].tready),
         .hostd_axis_host_src_tvalid   (axis_host_out_ul[{{ i }}].tvalid),
-{% endif %}
 {% endif %}
 {% if cnfg.en_mem %}
         .axis_card_sink_tdata   (axis_card_in_ul[{{ i }}].tdata),

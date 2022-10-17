@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     for (int jj=0; jj<txnlen; jj++){
       uint64_t key = txn_task.getKey();
       // nid, cid, tid, rd/wr, wLen
-      uint64_t nid = 0;
+      uint64_t nid = 1;
       uint64_t cid = 0;
       uint64_t content = nid + (cid<<1) + (key << 1) + ((uint64_t)(txn_task.getRW() ? 1 : 0) << (1+22+3)) + (wTupleLen << (1+22+3+2));
       // uint64_t content = nid + (cid<<1) + (key << (1+3)) + ((uint64_t)(txn_task.getRW() ? 1 : 0) << (1+3+22)) + (wTupleLen << (1+3+22+2));

@@ -68,4 +68,48 @@ public:
     
 };
 
+
+/* Bypass the ibv interface to HW */
+class ibvQpConnBpss {
+    /* Queue pair */
+    std::unique_ptr<ibvQp> qpair;
+
+    /* vFPGA */
+    cProc* fdev;
+    
+    /* Connection */
+    int connection = { 0 };
+    bool is_connected;
+
+    /* Init */
+    void initLocalQueue(uint32_t node_id, string ip_addr);
+
+public:
+    ibvQpConnBpss(int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr);
+    ~ibvQpConnBpss();
+
+    // Connection
+    inline auto isConnected() { return is_connected; }
+    void setConnection(int connection);
+    void closeConnection();
+
+    // Qpair
+    inline auto getQpairStruct() { return qpair.get(); }
+    inline auto getCProc() { return fdev; }
+    void writeContext(uint16_t port);
+
+    // ARP 
+    inline auto doArpLookup() { fdev->doArpLookup(qpair->remote.ip_addr); }
+
+    void ibvClear();
+
+    // Sync
+    void sendAck(uint32_t ack);
+    uint32_t readAck();
+    void ibvSync(bool mstr);
+    void closeAck();    
+    
+};
+
+
 }

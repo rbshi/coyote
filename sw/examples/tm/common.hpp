@@ -27,8 +27,6 @@
 using namespace std;
 using namespace fpga;
 
-#define INSTOFFS (((512<<10)<<10)<<2)
-
 // cRegs
 #define CTRLOFS_HBMHOST 0
 #define CTRLOFS_TXNENG 7
@@ -58,14 +56,35 @@ enum class TXNENGRegs : uint32_t {
 };
 
 
-// RDMA
-constexpr auto const nIdMaster = 0;
-constexpr auto const defMstrIp = "10.1.212.179"; // alveo-u55c-09
-constexpr auto const defPort = 5001;
-constexpr auto const qpId = 0;
-
-
 // help functions
+
+uint32_t convert( const std::string& ipv4Str ) {
+    std::istringstream iss( ipv4Str );
+    
+    uint32_t ipv4 = 0;
+    
+    for( uint32_t i = 0; i < 4; ++i ) {
+        uint32_t part;
+        iss >> part;
+        if ( iss.fail() || part > 255 )
+            throw std::runtime_error( "Invalid IP address - Expected [0, 255]" );
+        
+        // LSHIFT and OR all parts together with the first part as the MSB
+        ipv4 |= part << ( 8 * ( 3 - i ) );
+
+        // Check for delimiter except on last iteration
+        if ( i != 3 ) {
+            char delimiter;
+            iss >> delimiter;
+            if ( iss.fail() || delimiter != '.' ) 
+                throw std::runtime_error( "Invalid IP address - Expected '.' delimiter" );
+        }
+    }
+    
+    return ipv4;
+}
+
+
 int hbmRW(cProc& cproc, const void* hMem, const bool isWr, const uint32_t len, const uint64_t hbmAddr) {
 
   cproc.setCSR(hbmAddr, static_cast<uint32_t>(HBMRegs::CMEMADDR)); // set card memory addr
@@ -86,37 +105,6 @@ int hbmRW(cProc& cproc, const void* hMem, const bool isWr, const uint32_t len, c
   }
   return 0;
 }
-
-// int initTxnCmd(cProc& cproc, uint32_t nodeid, uint32_t txnlen, uint32_t txncnt, bool iszipfian, bool isnaive, double ztheta, double wrratio) {
-//   // one hbm channel, each tuple with 64 B
-//   uint64_t gtsize = 4096;
-
-//   // txnTask
-//   txnTask txn_task(iszipfian, ztheta, isnaive, gtsize);
-//   txn_task.keyInit(gtsize, wrratio, txnlen, txncnt);
-
-//   std::cout << "[INFO] Txn task generated." << std::endl;
-
-//   // Handles and alloc
-//   uint32_t n_pages = (txncnt*64*8 + hugePageSize - 1) / hugePageSize;
-//   void* hMem = cproc.getMem({CoyoteAlloc::HOST_2M, n_pages});
-//   uint64_t* instMem = (uint64_t*) hMem;
-
-//   for (int ii=0; ii<txncnt; ii++){
-//     *(instMem + ii * 64) = txnlen;
-//     for (int jj=0; jj<txnlen; jj++){
-//       uint64_t key = txn_task.getKey();
-//       uint64_t content = 0 + (0<<1) + (key << 1) + ((uint64_t)(txn_task.getRW() ? 1 : 0) << 23) + ((uint64_t)2 << 25);
-//       *(instMem + ii * 64 + jj + 1) = content;
-//       // std::cout << "[Val] " << content << "\t[Key] " << key << std::endl;
-//     }
-//   }
-
-//   hbmRW(cproc, hMem, true, (8*64*txncnt), INSTOFFS);
-//   DBG("[INFO] Txn loaded to card.");
-
-//   return 0;
-// }
 
 int initTxnCmd(cProc& cproc, uint32_t txncnt, string bin_fname, uint64_t insoffs) {
   // Handles and alloc

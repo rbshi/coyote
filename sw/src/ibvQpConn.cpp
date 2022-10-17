@@ -41,6 +41,17 @@ ibvQpConn::ibvQpConn(int32_t vfid, uint32_t node_id, string ip_addr, uint32_t n_
     initLocalQueue(node_id, ip_addr);
 }
 
+ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr) {
+    this->fdev = cproc;
+
+    // Conn
+    is_connected = false;
+
+    // Initialize local queues
+    initLocalQueue(node_id, ip_addr);
+}
+
+
 /**
  * Dtor
  */
@@ -48,6 +59,9 @@ ibvQpConn::~ibvQpConn() {
     closeConnection();
 }
 
+ibvQpConnBpss::~ibvQpConnBpss() {
+    closeConnection();
+}
 
 static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
@@ -112,10 +126,48 @@ void ibvQpConn::initLocalQueue(uint32_t node_id, string ip_addr) {
     fdev->changeBoardNumber(node_id);
 }
 
+void ibvQpConnBpss::initLocalQueue(uint32_t node_id, string ip_addr) {
+    std::default_random_engine rand_gen(seed);
+    std::uniform_int_distribution<int> distr(0, std::numeric_limits<std::uint32_t>::max());
+
+    qpair = std::make_unique<ibvQp>();
+
+    // IP 
+    uint32_t ibv_ip_addr = convert(ip_addr);
+    qpair->local.node_id = node_id;
+    qpair->local.ip_addr = ibv_ip_addr;
+    qpair->local.uintToGid(0, ibv_ip_addr);
+    qpair->local.uintToGid(8, ibv_ip_addr);
+    qpair->local.uintToGid(16, ibv_ip_addr);
+    qpair->local.uintToGid(24, ibv_ip_addr);
+
+    // qpn and psn
+    qpair->local.qpn = ((fdev->getVfid() & nRegMask) << pidBits) || (fdev->getCpid() & pidMask);
+    if(qpair->local.qpn == -1) 
+        throw std::runtime_error("Coyote PID incorrect, vfid: " + fdev->getVfid());
+    qpair->local.psn = distr(rand_gen) & 0xFFFFFF;
+    qpair->local.rkey = 0;
+
+    // Allocate buffer
+    // void *vaddr = fdev->getMem({CoyoteAlloc::HOST_2M, n_pages});
+    // qpair->local.vaddr = (uint64_t) vaddr;
+    // qpair->local.size = n_pages * hugePageSize;
+
+    // Set ip (should be done outside ibv)
+    // fdev->changeIpAddress(ibv_ip_addr);
+    // fdev->changeBoardNumber(node_id);
+}
+
+
 /**
  * @brief Set connection
  */
 void ibvQpConn::setConnection(int connection) {
+    this->connection = connection;
+    is_connected = true;
+}
+
+void ibvQpConnBpss::setConnection(int connection) {
     this->connection = connection;
     is_connected = true;
 }
@@ -127,10 +179,22 @@ void ibvQpConn::closeConnection() {
     }
 }
 
+void ibvQpConnBpss::closeConnection() {
+    if(isConnected()) {
+        close(connection);
+        is_connected = false;
+    }
+}
+
 /**
  * @brief Write queue pair context
  */
 void ibvQpConn::writeContext(uint16_t port) {
+    fdev->writeQpContext(qpair.get());
+    fdev->writeConnContext(qpair.get(), port);
+}
+
+void ibvQpConnBpss::writeContext(uint16_t port) {
     fdev->writeQpContext(qpair.get());
     fdev->writeConnContext(qpair.get(), port);
 }
@@ -167,11 +231,26 @@ void ibvQpConn::ibvClear() {
     fdev->clearCompleted();
 }
 
+void ibvQpConnBpss::ibvClear() {
+    fdev->clearCompleted();
+}
+
 /**
  * Sync with remote
  * @param: node_id - target node id
  */
 uint32_t ibvQpConn::readAck() {
+    uint32_t ack;
+   
+    if (::read(connection, &ack, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        ::close(connection);
+        throw std::runtime_error("Could not read ack\n");
+    }
+
+    return ack;
+}
+
+uint32_t ibvQpConnBpss::readAck() {
     uint32_t ack;
    
     if (::read(connection, &ack, sizeof(uint32_t)) != sizeof(uint32_t)) {
@@ -194,6 +273,14 @@ void ibvQpConn::closeAck() {
     }
 }
 
+void ibvQpConnBpss::closeAck() {
+    uint32_t ack;
+    
+    if (::read(connection, &ack, sizeof(uint32_t)) == 0) {
+        ::close(connection);
+    }
+}
+
 
 /**
  * Sync with remote
@@ -207,11 +294,28 @@ void ibvQpConn::sendAck(uint32_t ack) {
     }
 }
 
+void ibvQpConnBpss::sendAck(uint32_t ack) {
+    if(::write(connection, &ack, sizeof(uint32_t)) != sizeof(uint32_t))  {
+        ::close(connection);
+        throw std::runtime_error("Could not send ack\n");
+    }
+}
+
 /**
  * Sync with remote
  * @param: node_id - target node id
  */
 void ibvQpConn::ibvSync(bool mstr) {
+    if(mstr) {
+        sendAck(0);
+        readAck();
+    } else {
+        readAck();
+        sendAck(0);
+    }
+}
+
+void ibvQpConnBpss::ibvSync(bool mstr) {
     if(mstr) {
         sendAck(0);
         readAck();

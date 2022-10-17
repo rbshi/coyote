@@ -1,54 +1,56 @@
 #include "common.hpp"
 
+
+/* Params */
+constexpr auto const mstrNodeId = 0;
+constexpr auto const targetRegion = 0;
+constexpr auto const qpId = 0;
+constexpr auto const port = 18488;
+
 int main(int argc, char *argv[]) {
 
   // Read arguments
-  // TODO: simplify
   boost::program_options::options_description programDescription("Options:");
-  programDescription.add_options()("txncnt,c", boost::program_options::value<uint32_t>(), "txncnt")
-                                  ("nodeid,i", boost::program_options::value<uint32_t>(), "Node ID")
-                                  ("ibvaddr,a", boost::program_options::value<string>(), "IBV conn IP")
-                                  ("bfname,b", boost::program_options::value<string>(), "Instruction bin name");
+  programDescription.add_options()("node,d", boost::program_options::value<uint32_t>(), "Node ID")
+                                  ("tcpaddr,t", boost::program_options::value<string>(), "TCP conn IP")
+                                  ("ibvaddr,i", boost::program_options::value<string>(), "IBV conn IP")
+                                  ("cnttxn,c", boost::program_options::value<uint32_t>(), "Number of transactions")
+                                  ("fname,f", boost::program_options::value<string>(), "Instruction binary filename");
   boost::program_options::variables_map commandLineArgs;
   boost::program_options::store(boost::program_options::parse_command_line(argc, argv, programDescription), commandLineArgs);
   boost::program_options::notify(commandLineArgs);
 
-  uint32_t txncnt = commandLineArgs["txncnt"].as<uint32_t>();
-  string bin_fname = commandLineArgs["bfname"].as<string>();
+  bool mstr = true;
+  uint32_t node_id = commandLineArgs["node"].as<uint32_t>();
+  string tcp_mstr_ip;
+  if(commandLineArgs.count("tcpaddr") > 0) {
+      tcp_mstr_ip = commandLineArgs["tcpaddr"].as<string>();
+      mstr = false;
+  }
+  string ibv_ip = commandLineArgs["ibvaddr"].as<string>();
+
+  uint32_t cnt_txn = commandLineArgs["cnttxn"].as<uint32_t>();
+  string fname_task = commandLineArgs["fname"].as<string>();
 
   uint64_t insoffs = (((uint64_t)512 << 10) << 10);
 
-  // RDMA
-  uint32_t node_id = nIdMaster;
-  string mstr_ip_addr = defMstrIp;
-  uint32_t port = defPort;
-
-  constexpr auto const defIbvIp = "192.168.98.97";
-  string ibv_ip = defIbvIp;
-
-  if(commandLineArgs.count("nodeid") > 0) node_id = commandLineArgs["nodeid"].as<uint32_t>();
-  if(commandLineArgs.count("ibvaddr") > 0) ibv_ip = commandLineArgs["ibvaddr"].as<string>();
-  bool mstr = node_id == nIdMaster;
-  uint32_t ibv_ip_addr = baseIpAddress + node_id;
-
-  std::cout << "-- PARAMS -------------------------------------" << std::endl;
-  std::cout << "-----------------------------------------------" << std::endl;
+  PR_HEADER("PARAMS");
   std::cout << "Node ID: " << node_id << std::endl;
-
+  if(!mstr) { std::cout << "TCP master IP address: " << tcp_mstr_ip << std::endl; }
+  std::cout << "IBV IP address: " << ibv_ip << std::endl;
   // get fpga handle
   cProc cproc(0, getpid());
-  cproc.changeIpAddress(ibv_ip_addr);
+  cproc.changeIpAddress(convert(ibv_ip));
   cproc.changeBoardNumber(node_id);
 
-  initTxnCmd(cproc, txncnt, bin_fname, insoffs);
-  txnManCnfg(cproc, node_id, txncnt, insoffs);
+  initTxnCmd(cproc, cnt_txn, fname_task, insoffs);
+  txnManCnfg(cproc, node_id, cnt_txn, insoffs);
 
   // Create  queue pairs
-  ibvQpMap ictx;
-  // ictx.addQpair(qpId, &cproc, node_id, 1); // 1 page, will not be used
-  ictx.addQpair(qpId, 0, node_id, ibv_ip, 1); // 1 page, will not be used
-  mstr ? ictx.exchangeQpMaster(port) : ictx.exchangeQpSlave(mstr_ip_addr.c_str(), port);
-  ibvQpConn *iqp = ictx.getQpairConn(qpId);
+  ibvQpMap<ibvQpConnBpss> ictx;
+  ictx.addQpair(qpId, 0, &cproc, node_id, ibv_ip);
+  mstr ? ictx.exchangeQpMaster(port) : ictx.exchangeQpSlave(tcp_mstr_ip.c_str(), port);
+  ibvQpConnBpss *iqp = ictx.getQpairConn(qpId);
   iqp->ibvClear();
 
   // RDMA flow
