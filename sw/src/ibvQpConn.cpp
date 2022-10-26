@@ -190,7 +190,8 @@ void ibvQpConnBpss::closeConnection() {
  * @brief Write queue pair context
  */
 void ibvQpConn::writeContext(uint16_t port) {
-    fdev->writeQpContext(qpair.get());
+    ibvQp* qp = qpair.get();
+    fdev->writeQpContext(qp);
     fdev->writeConnContext(qpair.get(), port);
 }
 

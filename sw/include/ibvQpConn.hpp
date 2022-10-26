@@ -52,6 +52,9 @@ public:
     // ARP 
     inline auto doArpLookup() { fdev->doArpLookup(qpair->remote.ip_addr); }
 
+    // PrintNet
+    inline auto printNetDebug() { fdev->printNetDebug(); }
+
     // RDMA ops
     void ibvPostSend(ibvSendWr *wr);
 
@@ -100,6 +103,10 @@ public:
 
     // ARP 
     inline auto doArpLookup() { fdev->doArpLookup(qpair->remote.ip_addr); }
+
+    // PrintNet
+    inline auto printNetDebug() { fdev->printNetDebug(); }
+
 
     void ibvClear();
 

@@ -701,43 +701,29 @@ roce_stack inst_roce_stack(
     .psn_drop_pkg_count_valid(regInvalidPsnDropCount_valid),
     .psn_drop_pkg_count_data(regInvalidPsnDropCount)
 );
-/*
+
+
 ila_roce inst_ila_roce (
     .clk(nclk),
-    .probe0(axis_roce_slice_to_roce.tvalid),
-    .probe1(axis_roce_slice_to_roce.tready),
-    .probe2(axis_roce_slice_to_roce.tlast),
-    .probe3(axis_roce_to_roce_slice.tvalid),
-    .probe4(axis_roce_to_roce_slice.tready),
-    .probe5(axis_roce_to_roce_slice.tlast),
-    .probe6(m_rdma_rd_req.valid),
-    .probe7(m_rdma_rd_req.ready),
-    .probe8(m_rdma_rd_req.data), // 96
-    .probe9(m_rdma_wr_req.valid), 
-    .probe10(m_rdma_wr_req.ready),
-    .probe11(m_rdma_wr_req.data), // 96
-    .probe12(s_rdma_sq.valid),
-    .probe13(s_rdma_sq.ready),
-    .probe14(s_rdma_sq.data), // 544
-    
-    .probe15(m_axis_rdma_wr.tvalid),
-    .probe16(m_axis_rdma_wr.tready),
-    .probe17(m_axis_rdma_wr.tdata), // 512
-    .probe18(m_axis_rdma_wr.tlast),
-    .probe19(axis_roce_to_roce_slice.tdata), // 512
-    .probe20(axis_roce_slice_to_roce.tdata), // 512
-    
-    .probe21(s_axis_net.tvalid),
-    .probe22(s_axis_net.tready),
-    .probe23(s_axis_net.tdata), // 512
-    .probe24(s_axis_net.tlast),
-    
-    .probe25(m_axis_net.tvalid),
-    .probe26(m_axis_net.tready),
-    .probe27(m_axis_net.tdata), // 512
-    .probe28(m_axis_net.tlast)
+    .probe0(m_rdma_rd_req.valid),
+    .probe1(m_rdma_rd_req.ready),
+    .probe2(m_rdma_rd_req.data), // 96
+    .probe3(m_rdma_wr_req.valid), 
+    .probe4(m_rdma_wr_req.ready),
+    .probe5(m_rdma_wr_req.data), // 96
+    .probe6(s_rdma_sq.valid),
+    .probe7(s_rdma_sq.ready),
+    .probe8(s_rdma_sq.data), // 544
+    .probe9(m_axis_rdma_wr.tvalid),
+    .probe10(m_axis_rdma_wr.tready),
+    .probe11(m_axis_rdma_wr.tdata), // 512
+    .probe12(0),
+    .probe13(0),
+    .probe14(0),
+    .probe15(0),
+    .probe16(0)
 );
-*/
+
 
 `endif
 end

@@ -342,7 +342,7 @@ void cProc::invoke(const csInvokeAll& cs_invoke) {
 	if(cs_invoke.oper == CoyoteOper::NOOP) return;
 
 	// Lock
-	dlock.lock();
+	// dlock.lock();
 	
 	// Check outstanding read
 	if(isRead(cs_invoke.oper)) {
@@ -422,7 +422,7 @@ void cProc::invoke(const csInvokeAll& cs_invoke) {
 	wr_cmd_cnt++;
 
 	// Unlock
-	dlock.unlock();	
+	// dlock.unlock();	
 
 	// Polling
 	if(cs_invoke.poll) {
@@ -707,7 +707,7 @@ void cProc::clearIbvAcks() {
  */
 void cProc::postCmd(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t offs_0) {
     // Lock
-    dlock.lock();
+    // dlock.lock();
     
     // Check outstanding
     while (rdma_cmd_cnt > (cmd_fifo_depth - cmd_fifo_thr)) {
@@ -744,7 +744,7 @@ void cProc::postCmd(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t 
 #endif
 
     // Unlock
-    dlock.unlock();	
+    // dlock.unlock();	
 }
 
 // -------------------------------------------------------------------------------
@@ -762,7 +762,8 @@ void cProc::doArpLookup(uint32_t ip_addr) {
 	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
 		throw std::runtime_error("ioctl_arp_lookup failed");
 
-	usleep(arpSleepTime);
+	// usleep(arpSleepTime);
+	sleep(1);
 }
 
 /**
@@ -806,15 +807,19 @@ void cProc::writeQpContext(ibvQp *qp) {
 				  ((static_cast<uint64_t>(qp->local.psn) & 0xffffff) << qpContextLpsnOffs); 
 
         offs[3] = static_cast<uint64_t>(qp->remote.vaddr);
+
+        std::cout << "DEBUG" << std::endl;
 		
 		// Lock
-    	dlock.lock();
+    	// dlock.lock();
+
+	    std::cout << "DEBUG2" << std::endl;
 
         if(ioctl(fd, IOCTL_WRITE_CTX, &offs))
 			throw std::runtime_error("ioctl_write_ctx failed");
 
 		// Lock
-    	dlock.unlock();
+    	// dlock.unlock();
     }
 }
 
@@ -839,13 +844,13 @@ void cProc::writeConnContext(ibvQp *qp, uint32_t port) {
 		 		  (htols(static_cast<uint64_t>(qp->remote.gidToUint(16)) & 0xffffffff) << 0);
 
 		// Lock
-    	dlock.lock();
+    	// dlock.lock();
 
         if(ioctl(fd, IOCTL_WRITE_CONN, &offs))
 			throw std::runtime_error("ioctl_write_conn failed");
 
 		// Lock
-    	dlock.unlock();
+    	// dlock.unlock();
     }
 }
 
