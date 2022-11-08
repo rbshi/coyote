@@ -1,3 +1,7 @@
+#pragma once
+
+#include "cDefs.hpp"
+
 #include <iostream>
 #include <string>
 #include <malloc.h>
@@ -14,8 +18,36 @@
 #include <sys/un.h>
 #include <sstream>
 #include <atomic>
+#include <vector>
 
-#include "cIpc.hpp"
+namespace fpga {
+
+// ======-------------------------------------------------------------------------------
+// Args wrapper
+// ======-------------------------------------------------------------------------------
+class cMsg {
+protected:
+    static std::atomic<int32_t> curr_tid;
+public:
+    int32_t tid;
+    int32_t oid;
+    std::vector<uint64_t> args;
+
+    cMsg(int32_t oid, std::vector<uint64_t> args) :
+        tid(curr_tid++), oid(oid), args(args) {}
+
+    inline auto getTid() { return tid; }
+    inline auto getOid() { return oid; }
+    inline auto getArgs() { return args.data(); }
+    inline auto getArgsSize() { return args.size(); }
+};
+
+std::atomic<int32_t> cMsg::curr_tid;
+
+// ======-------------------------------------------------------------------------------
+// Communication lib
+// ======-------------------------------------------------------------------------------
+
 class cLib {
 private:
     int sockfd;
@@ -30,7 +62,7 @@ public:
     ~cLib();
 
     // Server comm
-    void run(msgType msg);
+    void task(cMsg msg);
 };
 
 std::atomic<uint32_t> cLib::curr_id;
@@ -63,31 +95,41 @@ cLib::cLib(const char *sock_name) {
 
 cLib::~cLib() {
     // Close conn
-    opcode = opCodeClose;
-    if(write(sockfd, &opcode, sizeof(uint8_t)) != sizeof(uint8_t)) {
+    opcode = defOpClose;
+    if(write(sockfd, &opcode, sizeof(int32_t)) != sizeof(int32_t)) {
         std::cout << "ERR:  Failed to send a request" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    std::cout << "Send close" << std::endl;
 
     close(sockfd);
 }
 
-void cLib::run(msgType msg) {
+void cLib::task(cMsg msg) {
     // Send request
-    opcode = opCodeRun;
-    if(write(sockfd, &opcode, sizeof(uint8_t)) != sizeof(uint8_t)) {
+    int32_t opcode = msg.getOid();
+
+    if(write(sockfd, &opcode, sizeof(int32_t)) != sizeof(int32_t)) {
         std::cout << "ERR:  Failed to send a request" << std::endl;
         exit(EXIT_FAILURE);
     }
-
     std::cout << "Sent opcode" << std::endl;
 
-    // Send payload
-    if(write(sockfd, &msg, sizeof(msgType)) != sizeof(msgType)) {
+    // Send payload size
+    int32_t msg_size = msg.getArgsSize() * sizeof(uint64_t);
+
+    if(write(sockfd, &msg_size, sizeof(int32_t)) != sizeof(int32_t)) {
         std::cout << "ERR:  Failed to send a request" << std::endl;
         exit(EXIT_FAILURE);
     }
+    std::cout << "Sent payload size" << std::endl;
 
+    // Send payload
+    if(write(sockfd, msg.getArgs(), msg_size) != msg_size) {
+        std::cout << "ERR:  Failed to send a request" << std::endl;
+        exit(EXIT_FAILURE);
+    }
     std::cout << "Sent payload" << std::endl;
 
     // Wait for completion
@@ -100,6 +142,8 @@ void cLib::run(msgType msg) {
     memcpy(&tid, recv_buff, sizeof(int32_t));
 
     std::cout << "Received completion event, tid: " << tid << std::endl;
+}
+
 }
 
 // Operations

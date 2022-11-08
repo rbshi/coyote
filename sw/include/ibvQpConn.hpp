@@ -9,7 +9,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "cProc.hpp"
+#include "cProcess.hpp"
 
 using namespace fpga;
 

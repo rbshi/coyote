@@ -25,58 +25,33 @@
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   */
 
-#include "fpga_drv.h"
+#ifndef __FPGA_SYSFS_H__
+#define __FPGA_SYSFS_H__
 
-int cyt_arch = CYT_ARCH_PCI;
-char *ip_addr_q0 = "0B01D4D1";
-char *ip_addr_q1 = "0B01D4D2";
-char *mac_addr_q0 = "000A35029DE5";
-char *mac_addr_q1 = "000A35029DE6";
+#include "coyote_dev.h"
 
-module_param(cyt_arch, int, S_IRUSR);
-MODULE_PARM_DESC(cyt_arch, "target architecture");
-module_param(ip_addr_q0, charp, 0000);
-MODULE_PARM_DESC(ip_addr_q0, "ip address QSFP0 (hex)");
-module_param(ip_addr_q1, charp, 0000);
-MODULE_PARM_DESC(ip_addr_q1, "ip address QSFP1 (hex)");
-module_param(mac_addr_q0, charp, 0000);
-MODULE_PARM_DESC(mac_addr_q0, "mac address QSFP0 (hex)");
-module_param(mac_addr_q1, charp, 0000);
-MODULE_PARM_DESC(mac_addr_q1, "mac address QSFP1 (hex)");
+/* Sysfs */
 
-static int __init coyote_init(void) 
-{
-    int ret_val = 0;
+// IP
+ssize_t cyt_attr_ip_q0_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_ip_q0_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count);
 
-    if(cyt_arch == CYT_ARCH_PCI) {
-        pr_info("loading: Coyote PCIe driver ...\n");
-        ret_val = pci_init();
-    } else if(cyt_arch == CYT_ARCH_ECI) {
-        pr_info("loading: Coyote ECI driver ...\n");
-        ret_val = eci_init();
-    } else {
-        pr_err("architecture not supported\n");
-        return -ENODEV;
-    }
+ssize_t cyt_attr_ip_q1_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_ip_q1_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count);
 
-    return ret_val;
-}
+// MAC
+ssize_t cyt_attr_mac_q0_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_mac_q0_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count);
 
-static void __exit coyote_exit(void) 
-{
-    pr_info("removal: Coyote driver ...\n");
+ssize_t cyt_attr_mac_q1_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_mac_q1_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count);
 
-    if(cyt_arch == CYT_ARCH_PCI) {
-        pci_exit();
-    } else if(cyt_arch == CYT_ARCH_ECI) {
-        eci_exit();
-    }
-}
+// Stats
+ssize_t cyt_attr_nstats_q0_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_nstats_q1_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+ssize_t cyt_attr_xstats_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
 
-module_init(coyote_init);
-module_exit(coyote_exit);
+// Config
+ssize_t cyt_attr_cnfg_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
 
-/* --------------------------------------------------------------------------- */
-MODULE_DESCRIPTION("Coyote driver.");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Dario Korolija <dario.korolija@inf.ethz.ch");
+#endif // FPGA FOPS
