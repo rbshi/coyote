@@ -23,7 +23,7 @@ class ibvQpConn {
     std::unique_ptr<ibvQp> qpair;
 
     /* vFPGA */
-    std::unique_ptr<cProc> fdev; 
+    std::unique_ptr<cProcess> fdev; 
 
     /* Buffer pages */
     uint32_t n_pages;
