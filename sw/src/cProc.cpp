@@ -762,8 +762,7 @@ void cProc::doArpLookup(uint32_t ip_addr) {
 	if(ioctl(fd, IOCTL_ARP_LOOKUP, &tmp))
 		throw std::runtime_error("ioctl_arp_lookup failed");
 
-	// usleep(arpSleepTime);
-	sleep(1);
+	usleep(arpSleepTime);
 }
 
 /**

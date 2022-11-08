@@ -1502,12 +1502,12 @@ module design_dynamic_wrapper #(
         .bpss_wr_done_ready       (bpss_wr_done_ul[{{ i }}].ready),
         .bpss_wr_done_data        (bpss_wr_done_ul[{{ i }}].data),
 {% else %}
-        .hostd_bpss_rd_req_valid        (bpss_rd_req_ul[{{ i }}].valid),
-        .hostd_bpss_rd_req_ready        (bpss_rd_req_ul[{{ i }}].ready),
-        .hostd_bpss_rd_req_data     (bpss_rd_req_ul[{{ i }}].data),
-        .hostd_bpss_wr_req_valid        (bpss_wr_req_ul[{{ i }}].valid),
-        .hostd_bpss_wr_req_ready        (bpss_wr_req_ul[{{ i }}].ready),
-        .hostd_bpss_wr_req_data     (bpss_wr_req_ul[{{ i }}].data),
+        .hostd_bpss_rd_req_valid      (bpss_rd_req_ul[{{ i }}].valid),
+        .hostd_bpss_rd_req_ready      (bpss_rd_req_ul[{{ i }}].ready),
+        .hostd_bpss_rd_req_data       (bpss_rd_req_ul[{{ i }}].data),
+        .hostd_bpss_wr_req_valid      (bpss_wr_req_ul[{{ i }}].valid),
+        .hostd_bpss_wr_req_ready      (bpss_wr_req_ul[{{ i }}].ready),
+        .hostd_bpss_wr_req_data       (bpss_wr_req_ul[{{ i }}].data),
         .hostd_bpss_rd_done_valid     (bpss_rd_done_ul[{{ i }}].valid),
         .hostd_bpss_rd_done_ready     (bpss_rd_done_ul[{{ i }}].ready),
         .hostd_bpss_rd_done_data      (bpss_rd_done_ul[{{ i }}].data),
@@ -1611,12 +1611,15 @@ module design_dynamic_wrapper #(
         .rdma_0_sq_valid        (rdma_0_sq_user_ul[{{ i }}].valid),
         .rdma_0_sq_ready        (rdma_0_sq_user_ul[{{ i }}].ready),
         .rdma_0_sq_data         (rdma_0_sq_user_ul[{{ i }}].data),
-        //.rdma_0_ack_valid       (rdma_0_ack_user_ul[{{ i }}].valid),
-        //.rdma_0_ack_ready       (rdma_0_ack_user_ul[{{ i }}].ready),
-        //.rdma_0_ack_data        (rdma_0_ack_user_ul[{{ i }}].data),
+{% if cnfg.apps == 'none' %}
         .rdma_0_ack_valid       (),
         .rdma_0_ack_ready       (1'b1),
         .rdma_0_ack_data        (),
+{% else %}
+        .rdma_0_ack_valid       (rdma_0_ack_user_ul[{{ i }}].valid),
+        .rdma_0_ack_ready       (rdma_0_ack_user_ul[{{ i }}].ready),
+        .rdma_0_ack_data        (rdma_0_ack_user_ul[{{ i }}].data),        
+{% endif %}        
         {% endif %}
 {% if cnfg.apps == 'none' %}
         .axis_rdma_0_sink_tdata  (axis_rdma_0_in_ul[{{ i }}].tdata),
@@ -1655,12 +1658,15 @@ module design_dynamic_wrapper #(
         .rdma_1_sq_valid        (rdma_1_sq_user_ul[{{ i }}].valid),
         .rdma_1_sq_ready        (rdma_1_sq_user_ul[{{ i }}].ready),
         .rdma_1_sq_data         (rdma_1_sq_user_ul[{{ i }}].data),
-        //.rdma_1_ack_valid       (rdma_1_ack_user_ul[{{ i }}].valid),
-        //.rdma_1_ack_ready       (rdma_1_ack_user_ul[{{ i }}].ready),
-        //.rdma_1_ack_data        (rdma_1_ack_user_ul[{{ i }}].data),
+{% if cnfg.apps == 'none' %}
         .rdma_1_ack_valid       (),
         .rdma_1_ack_ready       (1'b1),
         .rdma_1_ack_data        (),
+{% else %}
+        .rdma_1_ack_valid       (rdma_1_ack_user_ul[{{ i }}].valid),
+        .rdma_1_ack_ready       (rdma_1_ack_user_ul[{{ i }}].ready),
+        .rdma_1_ack_data        (rdma_1_ack_user_ul[{{ i }}].data),
+{% endif %}        
         {% endif %}
 {% if cnfg.apps == 'none' %}        
         .axis_rdma_1_sink_tdata  (axis_rdma_1_in_ul[{{ i }}].tdata),

@@ -37,7 +37,7 @@ import lynxTypes::*;
  * Intantiates either an RDMA or a TCP/IP core
  */
 module network_stack #(
-    parameter MAC_ADDRESS = 48'hE59D02350A00, // LSB first, 00:0A:35:02:9D:E5
+    parameter MAC_ADDRESS = 48'hE59D03350A00, // LSB first, 00:0A:35:03:9D:E5
     parameter IPV6_ADDRESS= 128'hE59D_02FF_FF35_0A02_0000_0000_0000_80FE, //LSB first: FE80_0000_0000_0000_020A_35FF_FF02_9DE5,
     parameter IP_SUBNET_MASK = 32'h00FFFFFF,
     parameter IP_DEFAULT_GATEWAY = 32'h00000000,

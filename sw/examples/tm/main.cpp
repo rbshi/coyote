@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   // get fpga handle
   cProc cproc(0, getpid());
   cproc.changeIpAddress(convert(ibv_ip));
-  cproc.changeBoardNumber(node_id);
+  cproc.changeBoardNumber(node_id+2);
 
   initTxnCmd(cproc, cnt_txn, fname_task, insoffs);
   txnManCnfg(cproc, node_id, cnt_txn, insoffs);
