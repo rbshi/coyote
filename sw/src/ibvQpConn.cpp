@@ -27,10 +27,9 @@ namespace fpga {
 /**
  * Ctor
  * @param: fdev - attached vFPGA
- * @param: node_id - current node ID
  * @param: n_pages - number of buffer pages
  */
-ibvQpConn::ibvQpConn(int32_t vfid, uint32_t node_id, string ip_addr, uint32_t n_pages) {
+ibvQpConn::ibvQpConn(int32_t vfid, string ip_addr, uint32_t n_pages) {
     this->fdev = make_unique<cProcess>(vfid, getpid());
     this->n_pages = n_pages;
 
@@ -38,7 +37,7 @@ ibvQpConn::ibvQpConn(int32_t vfid, uint32_t node_id, string ip_addr, uint32_t n_
     is_connected = false;
 
     // Initialize local queues
-    initLocalQueue(node_id, ip_addr);
+    initLocalQueue(ip_addr);
 }
 
 ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr) {
@@ -94,7 +93,7 @@ uint32_t convert( const std::string& ipv4Str ) {
 /**
  * Initialization of the local queues
  */
-void ibvQpConn::initLocalQueue(uint32_t node_id, string ip_addr) {
+void ibvQpConn::initLocalQueue(string ip_addr) {
     std::default_random_engine rand_gen(seed);
     std::uniform_int_distribution<int> distr(0, std::numeric_limits<std::uint32_t>::max());
 
@@ -102,7 +101,6 @@ void ibvQpConn::initLocalQueue(uint32_t node_id, string ip_addr) {
 
     // IP 
     uint32_t ibv_ip_addr = convert(ip_addr);
-    qpair->local.node_id = node_id;
     qpair->local.ip_addr = ibv_ip_addr;
     qpair->local.uintToGid(0, ibv_ip_addr);
     qpair->local.uintToGid(8, ibv_ip_addr);
@@ -234,7 +232,6 @@ void ibvQpConnBpss::ibvClear() {
 
 /**
  * Sync with remote
- * @param: node_id - target node id
  */
 uint32_t ibvQpConn::readAck() {
     uint32_t ack;
@@ -260,7 +257,6 @@ uint32_t ibvQpConnBpss::readAck() {
 
 /**
  * Wait on close remote
- * @param: node_id - target node id
  */
 void ibvQpConn::closeAck() {
     uint32_t ack;
@@ -281,7 +277,6 @@ void ibvQpConnBpss::closeAck() {
 
 /**
  * Sync with remote
- * @param: node_id - target node id
  * @param: ack - acknowledge message
  */
 void ibvQpConn::sendAck(uint32_t ack) {
@@ -300,7 +295,6 @@ void ibvQpConnBpss::sendAck(uint32_t ack) {
 
 /**
  * Sync with remote
- * @param: node_id - target node id
  */
 void ibvQpConn::ibvSync(bool mstr) {
     if(mstr) {
