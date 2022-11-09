@@ -40,14 +40,14 @@ ibvQpConn::ibvQpConn(int32_t vfid, string ip_addr, uint32_t n_pages) {
     initLocalQueue(ip_addr);
 }
 
-ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr) {
+ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr) {
     this->fdev = cproc;
 
     // Conn
     is_connected = false;
 
     // Initialize local queues
-    initLocalQueue(node_id, ip_addr);
+    initLocalQueue(ip_addr);
 }
 
 
@@ -120,7 +120,7 @@ void ibvQpConn::initLocalQueue(string ip_addr) {
     qpair->local.size = n_pages * hugePageSize;
 }
 
-void ibvQpConnBpss::initLocalQueue(uint32_t node_id, string ip_addr) {
+void ibvQpConnBpss::initLocalQueue(string ip_addr) {
     std::default_random_engine rand_gen(seed);
     std::uniform_int_distribution<int> distr(0, std::numeric_limits<std::uint32_t>::max());
 
@@ -128,7 +128,6 @@ void ibvQpConnBpss::initLocalQueue(uint32_t node_id, string ip_addr) {
 
     // IP 
     uint32_t ibv_ip_addr = convert(ip_addr);
-    qpair->local.node_id = node_id;
     qpair->local.ip_addr = ibv_ip_addr;
     qpair->local.uintToGid(0, ibv_ip_addr);
     qpair->local.uintToGid(8, ibv_ip_addr);
@@ -146,10 +145,6 @@ void ibvQpConnBpss::initLocalQueue(uint32_t node_id, string ip_addr) {
     // void *vaddr = fdev->getMem({CoyoteAlloc::HOST_2M, n_pages});
     // qpair->local.vaddr = (uint64_t) vaddr;
     // qpair->local.size = n_pages * hugePageSize;
-
-    // Set ip (should be done outside ibv)
-    // fdev->changeIpAddress(ibv_ip_addr);
-    // fdev->changeBoardNumber(node_id);
 }
 
 

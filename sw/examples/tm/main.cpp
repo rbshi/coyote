@@ -39,16 +39,14 @@ int main(int argc, char *argv[]) {
   if(!mstr) { std::cout << "TCP master IP address: " << tcp_mstr_ip << std::endl; }
   std::cout << "IBV IP address: " << ibv_ip << std::endl;
   // get fpga handle
-  cProc cproc(0, getpid());
-  cproc.changeIpAddress(convert(ibv_ip));
-  cproc.changeBoardNumber(node_id+2);
+  cProcess cproc(0, getpid());
 
   initTxnCmd(cproc, cnt_txn, fname_task, insoffs);
   txnManCnfg(cproc, node_id, cnt_txn, insoffs);
 
   // Create  queue pairs
   ibvQpMap<ibvQpConnBpss> ictx;
-  ictx.addQpair(qpId, 0, &cproc, node_id, ibv_ip);
+  ictx.addQpair(qpId, 0, &cproc, ibv_ip);
   mstr ? ictx.exchangeQpMaster(port) : ictx.exchangeQpSlave(tcp_mstr_ip.c_str(), port);
   ibvQpConnBpss *iqp = ictx.getQpairConn(qpId);
   iqp->ibvClear();
@@ -78,8 +76,6 @@ int main(int argc, char *argv[]) {
       iqp->readAck();
       iqp->closeConnection();
   }
-
-  cproc.printNetDebug();
 
   return EXIT_SUCCESS;
 }

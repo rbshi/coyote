@@ -49,8 +49,8 @@ public:
     ~ibvQpMap() {}
 
     // Qpair mgmt
-    void addQpair(uint32_t qpid, int32_t vfid, uint32_t node_id, string ip_addr, uint32_t n_pages);
-    void addQpair(uint32_t qpid, int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr);
+    void addQpair(uint32_t qpid, int32_t vfid, string ip_addr, uint32_t n_pages);
+    void addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr);
     void removeQpair(uint32_t qpid);
     T* getQpairConn(uint32_t qpid);
 
@@ -64,21 +64,21 @@ public:
 
 
 template <typename T>
-void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, uint32_t node_id, string ip_addr, uint32_t n_pages) {
+void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, string ip_addr, uint32_t n_pages) {
     if(qpairs.find(qpid) != qpairs.end())
         throw std::runtime_error("Queue pair already exists");
 
-    auto qpair = std::make_unique<ibvQpConn>(vfid, node_id, ip_addr, n_pages);
+    auto qpair = std::make_unique<ibvQpConn>(vfid, ip_addr, n_pages);
     qpairs.emplace(qpid, std::move(qpair));
     DBG1("Queue pair created, qpid: " << qpid);
 } 
 
 template <typename T>
-void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr) {
+void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr) {
     if(qpairs.find(qpid) != qpairs.end())
         throw std::runtime_error("Queue pair already exists");
 
-    auto qpair = std::make_unique<T>(vfid, cproc, node_id, ip_addr);
+    auto qpair = std::make_unique<T>(vfid, cproc, ip_addr);
     qpairs.emplace(qpid, std::move(qpair));
     DBG1("Queue pair created, qpid: " << qpid);
 } 

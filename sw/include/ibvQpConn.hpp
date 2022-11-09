@@ -52,9 +52,6 @@ public:
     // ARP 
     inline auto doArpLookup() { fdev->doArpLookup(qpair->remote.ip_addr); }
 
-    // PrintNet
-    inline auto printNetDebug() { fdev->printNetDebug(); }
-
     // RDMA ops
     void ibvPostSend(ibvSendWr *wr);
 
@@ -78,17 +75,17 @@ class ibvQpConnBpss {
     std::unique_ptr<ibvQp> qpair;
 
     /* vFPGA */
-    cProc* fdev;
+    cProcess* fdev;
     
     /* Connection */
     int connection = { 0 };
     bool is_connected;
 
     /* Init */
-    void initLocalQueue(uint32_t node_id, string ip_addr);
+    void initLocalQueue(string ip_addr);
 
 public:
-    ibvQpConnBpss(int32_t vfid, cProc* cproc, uint32_t node_id, string ip_addr);
+    ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr);
     ~ibvQpConnBpss();
 
     // Connection
@@ -103,10 +100,6 @@ public:
 
     // ARP 
     inline auto doArpLookup() { fdev->doArpLookup(qpair->remote.ip_addr); }
-
-    // PrintNet
-    inline auto printNetDebug() { fdev->printNetDebug(); }
-
 
     void ibvClear();
 

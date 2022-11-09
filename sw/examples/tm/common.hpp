@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include "cBench.hpp"
-#include "cProc.hpp"
+#include "cProcess.hpp"
 #include "ibvQpConn.hpp"
 #include "ibvQpMap.hpp"
 
@@ -85,7 +85,7 @@ uint32_t convert( const std::string& ipv4Str ) {
 }
 
 
-int hbmRW(cProc& cproc, const void* hMem, const bool isWr, const uint32_t len, const uint64_t hbmAddr) {
+int hbmRW(cProcess& cproc, const void* hMem, const bool isWr, const uint32_t len, const uint64_t hbmAddr) {
 
   cproc.setCSR(hbmAddr, static_cast<uint32_t>(HBMRegs::CMEMADDR)); // set card memory addr
   cproc.setCSR(reinterpret_cast<uint64_t>(hMem), static_cast<uint32_t>(HBMRegs::HOSTADDR)); // set hostAddr
@@ -106,7 +106,7 @@ int hbmRW(cProc& cproc, const void* hMem, const bool isWr, const uint32_t len, c
   return 0;
 }
 
-int initTxnCmd(cProc& cproc, uint32_t txncnt, string bin_fname, uint64_t insoffs) {
+int initTxnCmd(cProcess& cproc, uint32_t txncnt, string bin_fname, uint64_t insoffs) {
   // Handles and alloc
   uint32_t n_pages = (txncnt*64*8 + hugePageSize - 1) / hugePageSize;
   void* hMem = cproc.getMem({CoyoteAlloc::HOST_2M, n_pages});
@@ -121,7 +121,7 @@ int initTxnCmd(cProc& cproc, uint32_t txncnt, string bin_fname, uint64_t insoffs
   return 0;
 }
 
-int txnManPrtStatus(cProc& cproc) {
+int txnManPrtStatus(cProcess& cproc) {
   std::cout << "CntTxnCmt: " << cproc.getCSR(static_cast<uint32_t>(TXNENGRegs::CntTxnCmt)) << std::endl;
   std::cout << "CntTxnAbt: " << cproc.getCSR(static_cast<uint32_t>(TXNENGRegs::CntTxnAbt)) << std::endl;
   std::cout << "CntTxnLd: " << cproc.getCSR(static_cast<uint32_t>(TXNENGRegs::CntTxnLd)) << std::endl;
@@ -130,14 +130,14 @@ int txnManPrtStatus(cProc& cproc) {
   return 0;
 }
 
-int txnManCnfg(cProc& cproc, uint32_t nodeid, uint32_t txncnt, uint64_t insoffs) {
+int txnManCnfg(cProcess& cproc, uint32_t nodeid, uint32_t txncnt, uint64_t insoffs) {
   cproc.setCSR(nodeid, static_cast<uint32_t>(TXNENGRegs::NodeId));
   cproc.setCSR(txncnt, static_cast<uint32_t>(TXNENGRegs::TxnNum));
   cproc.setCSR(insoffs>>6, static_cast<uint32_t>(TXNENGRegs::CMemAddr)); // cmdOffs unit: 64B
   return 0;
 }
 
-int txnManStart(cProc& cproc) {
+int txnManStart(cProcess& cproc) {
   cproc.setCSR(1, static_cast<uint32_t>(TXNENGRegs::Start));
   return 0;
 }
