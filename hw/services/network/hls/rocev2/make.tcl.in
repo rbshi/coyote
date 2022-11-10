@@ -17,8 +17,8 @@ add_files ${CMAKE_CURRENT_SOURCE_DIR}/../ib_transport_protocol/ib_transport_prot
 add_files ${CMAKE_CURRENT_SOURCE_DIR}/rocev2.cpp -cflags "-I${CMAKE_CURRENT_BINARY_DIR}"
 
 
-# add_files -tb ${CMAKE_CURRENT_SOURCE_DIR}/test_rocev2.cpp -cflags "-I${CMAKE_CURRENT_BINARY_DIR}"
-add_files -tb ${CMAKE_CURRENT_SOURCE_DIR}/test_ib_transport.cpp -cflags "-I${CMAKE_CURRENT_BINARY_DIR}"
+add_files -tb ${CMAKE_CURRENT_SOURCE_DIR}/test_rocev2.cpp -cflags "-I${CMAKE_CURRENT_BINARY_DIR}"
+# add_files -tb ${CMAKE_CURRENT_SOURCE_DIR}/test_ib_transport.cpp -cflags "-I${CMAKE_CURRENT_BINARY_DIR}"
 
 
 #config_rtl -disable_start_propagation
@@ -29,8 +29,8 @@ set command [lindex $argv 2]
 if {$command == "synthesis"} {
    csynth_design
 } elseif {$command == "csim"} {
-   # csim_design -argv {${CMAKE_CURRENT_SOURCE_DIR}/write_read_read_large_receiver.in ${CMAKE_CURRENT_SOURCE_DIR}/write_read_read_large_receiver.out ${CMAKE_CURRENT_SOURCE_DIR}/rdma_txwriteread.in ${CMAKE_CURRENT_SOURCE_DIR}/rdma_txwriteread.out}
-   csim_design
+   csim_design -argv {${CMAKE_CURRENT_SOURCE_DIR}/test_packet_1.txt ${CMAKE_CURRENT_SOURCE_DIR}/write_read_read_large_receiver.out ${CMAKE_CURRENT_SOURCE_DIR}/rdma_txwriteread.in ${CMAKE_CURRENT_SOURCE_DIR}/rdma_txwriteread.out}
+   # csim_design
 } elseif {$command == "ip"} {
    export_design -format ip_catalog -ipname "rocev2" -display_name "RoCEv2 Endpoint" -description "" -vendor "ethz.systems.fpga" -version "0.82"
 } elseif {$command == "services"} {
