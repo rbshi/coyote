@@ -387,7 +387,7 @@ void cProcess::invoke(const csInvokeAll& cs_invoke) {
 	if(cs_invoke.oper == CoyoteOper::NOOP) return;
 
 	// Lock
-	dlock.lock();
+	// dlock.lock();
 	
 	// Check outstanding read
 	if(isRead(cs_invoke.oper)) {
@@ -467,7 +467,7 @@ void cProcess::invoke(const csInvokeAll& cs_invoke) {
 	wr_cmd_cnt++;
 
 	// Unlock
-	dlock.unlock();	
+	// dlock.unlock();	
 
 	// Polling
 	if(cs_invoke.poll) {
@@ -633,7 +633,7 @@ void cProcess::ibvPostSend(ibvQp *qp, ibvSendWr *wr) {
  */
 void cProcess::postPrep(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t offs_0, uint8_t offs_reg) {
 	 // Lock
-    dlock.lock();
+    // dlock.lock();
 
 #ifdef EN_AVX
     if(fcnfg.en_avx) {
@@ -650,7 +650,7 @@ void cProcess::postPrep(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint6
 #endif
 
 	// Unlock
-    dlock.unlock();	
+    // dlock.unlock();	
 }
 
 /**
@@ -695,7 +695,7 @@ void cProcess::clearIbvAcks() {
  */
 void cProcess::postCmd(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64_t offs_0) {
     // Lock
-    dlock.lock();
+    // dlock.lock();
     
     // Check outstanding
     while (rdma_cmd_cnt > (cmd_fifo_depth - cmd_fifo_thr)) {
@@ -732,7 +732,7 @@ void cProcess::postCmd(uint64_t offs_3, uint64_t offs_2, uint64_t offs_1, uint64
 #endif
 
     // Unlock
-    dlock.unlock();	
+    // dlock.unlock();	
 }
 
 // ======-------------------------------------------------------------------------------
