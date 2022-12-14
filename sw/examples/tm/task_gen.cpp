@@ -32,7 +32,8 @@ int main(int argc, char *argv[]) {
                                   ("iszipfian,z", boost::program_options::value<bool>(), "iszipfian")
                                   ("isnaive,a", boost::program_options::value<bool>(), "isnaive")
                                   ("ztheta,t", boost::program_options::value<double>(), "zipFianTheta")
-                                  ("widx,i", boost::program_options::value<uint32_t>(), "workload idx");
+                                  ("widx,i", boost::program_options::value<uint32_t>(), "workload idx (file name)")
+                                  ("nodeid,n", boost::program_options::value<uint32_t>(), "nodeid");
   boost::program_options::variables_map commandLineArgs;
   boost::program_options::store(boost::program_options::parse_command_line(argc, argv, programDescription), commandLineArgs);
   boost::program_options::notify(commandLineArgs);
@@ -45,6 +46,11 @@ int main(int argc, char *argv[]) {
   bool isnaive = commandLineArgs["isnaive"].as<bool>();
   double ztheta = commandLineArgs["ztheta"].as<double>();
   uint32_t widx = commandLineArgs["widx"].as<uint32_t>();
+
+  uint32_t nodeid = 0;
+  if(commandLineArgs.count("nodeid") > 0) {
+      nodeid = commandLineArgs["nodeid"].as<uint32_t>();
+  }
 
   // string fname = "txn_" + to_string(txnlen) + "_" + to_string(txncnt) + "_" + to_string(wrratio) + "_" + BOOL_STR(iszipfian) + "_" + BOOL_STR(isnaive) + "_" + to_string(ztheta);
 
@@ -68,7 +74,7 @@ int main(int argc, char *argv[]) {
     for (int jj=0; jj<txnlen; jj++){
       uint64_t key = txn_task.getKey();
       // nid, cid, tid, rd/wr, wLen
-      uint64_t nid = 1;
+      uint64_t nid = nodeid;
       uint64_t cid = 0;
       uint64_t content = nid + (cid<<1) + (key << 1) + ((uint64_t)(txn_task.getRW() ? 1 : 0) << (1+22+3)) + (wTupleLen << (1+22+3+2));
       // uint64_t content = nid + (cid<<1) + (key << (1+3)) + ((uint64_t)(txn_task.getRW() ? 1 : 0) << (1+3+22)) + (wTupleLen << (1+3+22+2));

@@ -82,10 +82,10 @@ class ibvQpConnBpss {
     bool is_connected;
 
     /* Init */
-    void initLocalQueue(string ip_addr);
+    void initLocalQueue(string ip_addr, uint32_t init_local_qpn);
 
 public:
-    ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr);
+    ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr, uint32_t init_local_qpn);
     ~ibvQpConnBpss();
 
     // Connection

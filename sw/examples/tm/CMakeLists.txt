@@ -25,6 +25,9 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 add_executable(main ${COYOTE_SOURCES} main.cpp)
 target_link_libraries(main ${Boost_LIBRARIES})
 
+add_executable(single_node ${COYOTE_SOURCES} single_node.cpp)
+target_link_libraries(single_node ${Boost_LIBRARIES})
+
 add_executable(task_gen ${COYOTE_SOURCES} task_gen.cpp)
 target_link_libraries(task_gen ${Boost_LIBRARIES})
 

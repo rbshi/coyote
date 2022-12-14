@@ -22,7 +22,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../../cma
 
 
 set(FPGA_PART xcvu9p-flgb2104-3-e CACHE STRING "FPGA part")
-set(RETRANS_EN 0 CACHE STRING "Re-transmission logic enable")
+set(RETRANS_EN 1 CACHE STRING "Re-transmission logic enable")
 set(DATA_WIDTH 64 CACHE STRING "Width of data path in bytes")
 set(PMTU_BYTES 4096 CACHE STRING "PMTU size.")
 set(CLOCK_PERIOD 6.4 CACHE STRING "Target clock period in nanoseconds")
@@ -56,8 +56,8 @@ set(EXAMPLE_HLS_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/rocev2.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/rocev2.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rocev2_config.hpp.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_rocev2.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/test_ib_transport.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/test_rocev2.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_ib_transport.cpp
     )
 
 

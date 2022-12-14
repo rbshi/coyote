@@ -11,11 +11,11 @@ int main(int argc, char *argv[]) {
 
   // Read arguments
   boost::program_options::options_description programDescription("Options:");
-  programDescription.add_options()("node,d", boost::program_options::value<uint32_t>(), "Node ID")
-                                  ("tcpaddr,t", boost::program_options::value<string>(), "TCP conn IP")
-                                  ("ibvaddr,i", boost::program_options::value<string>(), "IBV conn IP")
-                                  ("cnttxn,c", boost::program_options::value<uint32_t>(), "Number of transactions")
-                                  ("fname,f", boost::program_options::value<string>(), "Instruction binary filename");
+  programDescription.add_options()
+    ("node,d", boost::program_options::value<uint32_t>(), "Node ID")
+    ("tcpaddr,t", boost::program_options::value<string>(), "TCP conn IP")
+    ("cnttxn,c", boost::program_options::value<uint32_t>(), "Number of transactions")
+    ("fname,f", boost::program_options::value<string>(), "Instruction binary filename");
   boost::program_options::variables_map commandLineArgs;
   boost::program_options::store(boost::program_options::parse_command_line(argc, argv, programDescription), commandLineArgs);
   boost::program_options::notify(commandLineArgs);
@@ -27,7 +27,11 @@ int main(int argc, char *argv[]) {
       tcp_mstr_ip = commandLineArgs["tcpaddr"].as<string>();
       mstr = false;
   }
-  string ibv_ip = commandLineArgs["ibvaddr"].as<string>();
+
+  char const* env_var_ip = std::getenv("FPGA_0_IP_ADDRESS");
+  if(env_var_ip == nullptr) 
+  throw std::runtime_error("IBV IP address not provided");
+  string ibv_ip(env_var_ip);
 
   uint32_t cnt_txn = commandLineArgs["cnttxn"].as<uint32_t>();
   string fname_task = commandLineArgs["fname"].as<string>();
@@ -37,7 +41,7 @@ int main(int argc, char *argv[]) {
   PR_HEADER("PARAMS");
   std::cout << "Node ID: " << node_id << std::endl;
   if(!mstr) { std::cout << "TCP master IP address: " << tcp_mstr_ip << std::endl; }
-  std::cout << "IBV IP address: " << ibv_ip << std::endl;
+
   // get fpga handle
   cProcess cproc(0, getpid());
 
@@ -46,15 +50,17 @@ int main(int argc, char *argv[]) {
 
   // Create  queue pairs
   ibvQpMap<ibvQpConnBpss> ictx;
-  ictx.addQpair(qpId, 0, &cproc, ibv_ip);
+  ictx.addQpair(0, 0, &cproc, ibv_ip, 0); // qpid = 0, local_qpn = 0
+  ictx.addQpair(1, 0, &cproc, ibv_ip, 1); // qpid = 1, local_qpn = 1
+
   mstr ? ictx.exchangeQpMaster(port) : ictx.exchangeQpSlave(tcp_mstr_ip.c_str(), port);
   ibvQpConnBpss *iqp = ictx.getQpairConn(qpId);
   iqp->ibvClear();
 
   // RDMA flow
-  // [flowid:qpn:len:en]
-  cproc.setCSR(((uint64_t)1 + ((uint64_t)1024<<1) + ((uint64_t)0<<33) + ((uint64_t)1 << 57)) , static_cast<uint32_t>(TXNENGRegs::FlowMstr));
-  cproc.setCSR(((uint64_t)1 + ((uint64_t)1024<<1) + ((uint64_t)0<<33) + ((uint64_t)0 << 57)) , static_cast<uint32_t>(TXNENGRegs::FlowSlve));
+  // [qpn:len:en]
+  cproc.setCSR(((uint64_t)1 + ((uint64_t)1024<<1) + ((uint64_t)0<<33)) , static_cast<uint32_t>(TXNENGRegs::FlowMstr));
+  cproc.setCSR(((uint64_t)1 + ((uint64_t)1024<<1) + ((uint64_t)1<<33)) , static_cast<uint32_t>(TXNENGRegs::FlowSlve));
 
   // Sync up
   std::cout << "\e[1mSyncing ...\e[0m" << std::endl;

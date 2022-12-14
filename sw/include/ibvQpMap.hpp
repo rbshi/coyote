@@ -50,7 +50,7 @@ public:
 
     // Qpair mgmt
     void addQpair(uint32_t qpid, int32_t vfid, string ip_addr, uint32_t n_pages);
-    void addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr);
+    void addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr, uint32_t init_local_qpn);
     void removeQpair(uint32_t qpid);
     T* getQpairConn(uint32_t qpid);
 
@@ -74,11 +74,11 @@ void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, string ip_addr, uint32_t
 } 
 
 template <typename T>
-void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr) {
+void ibvQpMap<T>::addQpair(uint32_t qpid, int32_t vfid, cProcess* cproc, string ip_addr, uint32_t init_local_qpn) {
     if(qpairs.find(qpid) != qpairs.end())
         throw std::runtime_error("Queue pair already exists");
 
-    auto qpair = std::make_unique<T>(vfid, cproc, ip_addr);
+    auto qpair = std::make_unique<T>(vfid, cproc, ip_addr, init_local_qpn);
     qpairs.emplace(qpid, std::move(qpair));
     DBG1("Queue pair created, qpid: " << qpid);
 } 
@@ -127,11 +127,11 @@ void ibvQpMap<T>::exchangeQpMaster(uint16_t port) {
     int n_qpairs = qpairs.size();
     listen(sockfd, n_qpairs);
 
-    for(int i = 0; i < n_qpairs; i++) {
-        connfd = ::accept(sockfd, NULL, 0);
-        if (connfd < 0) 
-            throw std::runtime_error("Accept failed");
-        
+    connfd = ::accept(sockfd, NULL, 0);
+    if (connfd < 0) 
+        throw std::runtime_error("Accept failed");
+
+    for(int i = 0; i < n_qpairs; i++) {        
         // Read qpid
         if (::read(connfd, recv_buf, sizeof(uint32_t)) != sizeof(uint32_t)) {
             ::close(connfd);
@@ -211,24 +211,28 @@ void ibvQpMap<T>::exchangeQpSlave(const char *trgt_addr, uint16_t port) {
         throw std::runtime_error("getaddrinfo() failed");
     }
 
+    for (t = res; t; t = t->ai_next) {
+        sockfd = ::socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+        if (sockfd >= 0) {
+            if (!::connect(sockfd, t->ai_addr, t->ai_addrlen)) {
+                break;
+            }
+            ::close(sockfd);
+            sockfd = -1;
+        }
+    }
+
+    if (sockfd < 0)
+        throw std::runtime_error("Could not connect to master: " + std::string(trgt_addr) + ":" + to_string(port));
+
     int n_qpairs = qpairs.size();
     for(auto &[curr_qpid, curr_qp_conn] : qpairs) {
-        for (t = res; t; t = t->ai_next) {
-            sockfd = ::socket(t->ai_family, t->ai_socktype, t->ai_protocol);
-            if (sockfd >= 0) {
-                if (!::connect(sockfd, t->ai_addr, t->ai_addrlen)) {
-                    break;
-                }
-                ::close(sockfd);
-                sockfd = -1;
-            }
-        }
 
-        if (sockfd < 0)
-            throw std::runtime_error("Could not connect to master: " + std::string(trgt_addr) + ":" + to_string(port));
-
-        // Send qpid
-        if (::write(sockfd, &curr_qpid, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        // FIXME:
+        // Send qpid (with Master-Slave mapping)
+        uint32_t mapped_qpid = (curr_qpid+1)%2;
+        
+        if (::write(sockfd, &mapped_qpid, sizeof(uint32_t)) != sizeof(uint32_t)) {
             ::close(sockfd);
             throw std::runtime_error("Could not write a qpid");
         }
@@ -267,9 +271,8 @@ void ibvQpMap<T>::exchangeQpSlave(const char *trgt_addr, uint16_t port) {
 
         // ARP lookup
         curr_qp_conn->doArpLookup();
-
-        if (res) 
-            freeaddrinfo(res);
-        free(service);
     }
+    if (res) 
+        freeaddrinfo(res);
+    free(service);
 }

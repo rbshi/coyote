@@ -40,14 +40,14 @@ ibvQpConn::ibvQpConn(int32_t vfid, string ip_addr, uint32_t n_pages) {
     initLocalQueue(ip_addr);
 }
 
-ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr) {
+ibvQpConnBpss::ibvQpConnBpss(int32_t vfid, cProcess* cproc, string ip_addr, uint32_t init_local_qpn) {
     this->fdev = cproc;
 
     // Conn
     is_connected = false;
 
     // Initialize local queues
-    initLocalQueue(ip_addr);
+    initLocalQueue(ip_addr, init_local_qpn);
 }
 
 
@@ -120,7 +120,7 @@ void ibvQpConn::initLocalQueue(string ip_addr) {
     qpair->local.size = n_pages * hugePageSize;
 }
 
-void ibvQpConnBpss::initLocalQueue(string ip_addr) {
+void ibvQpConnBpss::initLocalQueue(string ip_addr, uint32_t init_local_qpn) {
     std::default_random_engine rand_gen(seed);
     std::uniform_int_distribution<int> distr(0, std::numeric_limits<std::uint32_t>::max());
 
@@ -135,9 +135,9 @@ void ibvQpConnBpss::initLocalQueue(string ip_addr) {
     qpair->local.uintToGid(24, ibv_ip_addr);
 
     // qpn and psn
-    qpair->local.qpn = ((fdev->getVfid() & nRegMask) << pidBits) || (fdev->getCpid() & pidMask);
+    qpair->local.qpn = init_local_qpn;
     if(qpair->local.qpn == -1) 
-        throw std::runtime_error("Coyote PID incorrect, vfid: " + fdev->getVfid());
+        throw std::runtime_error("Coyote PID incorrect, init_local_qpn: " + init_local_qpn);
     qpair->local.psn = distr(rand_gen) & 0xFFFFFF;
     qpair->local.rkey = 0;
 

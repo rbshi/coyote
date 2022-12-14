@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.0)
 project(main)
 
@@ -5,7 +6,7 @@ project(main)
 include_directories(${CMAKE_SOURCE_DIR}/include ${TARGET_DIR}/include)
 
 # Sources
-file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/examples/${TARGET_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB SOURCES ${TARGET_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 # AVX support (Disable on Enzian)
 set(EN_AVX 1 CACHE STRING "AVX environment.")
