@@ -254,7 +254,7 @@ void cService::process_requests() {
 
                             // Schedule
                             // FIXME compiling error
-                            // el.second->scheduleTask(std::unique_ptr<bTask>(new cTask(0, 0, 1, taskIter->second, msg)));
+                            el.second->scheduleTask(std::unique_ptr<bTask>(new cTask(0, 0, 1, taskIter->second, msg)));
                             syslog(LOG_NOTICE, "Task scheduled, client %d, opcode %d", el.first, opcode);
                         } else {
                             syslog(LOG_ERR, "Request invalid, connfd: %d, received: %d", connfd, n);

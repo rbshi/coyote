@@ -168,10 +168,6 @@ set(HCLK_F 450 CACHE STRING "HBM clock frequency.")
 # Examples
 set(EXAMPLE 0 CACHE STRING "Chosen example.")
 
-# Apps
-set(APPS none CACHE STRING "App module for dynamic wrapper.")
-set(APPS_CONFIG 1t2n1c8p CACHE STRING "App  for dynamic wrapper.")
-configure_file(${CMAKE_SOURCE_DIR}/scripts/apps.tcl.in ${CMAKE_BINARY_DIR}/apps.tcl)
 # TLB params
 set(TLBS_S 10 CACHE STRING "TLB (small) size")
 set(TLBS_A 4 CACHE STRING "TLB (small) associativity")
@@ -492,6 +488,11 @@ if(VITIS_HLS)
 else()
   message("** Vivado HLS flow")
 endif()
+
+# Additional
+set(EN_REGULAR_NAME 0 CACHE STRING "Enable more regular port naming for dynamic modules, e.g. SpinalHDL.")
+set(EN_INCR_IMPL 0 CACHE STRING "Enable incremental implementation, i.e., generate shell_routed design checkpoint w/o dynamic instance.")
+
 
 # Set ip cache
 #

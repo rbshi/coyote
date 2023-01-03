@@ -75,7 +75,8 @@ module roce_stack (
 
 // SQ
 `ifdef VITIS_HLS
-    logic [RDMA_REQ_BITS+32-RDMA_OPCODE_BITS-1:0] rdma_sq_data;
+    // op_code enum is 32b, padding 5 at msb to be a multiple of 8b
+    logic [RDMA_MSG_BITS+1+RDMA_QPN_BITS+32+5-1:0] rdma_sq_data;
 `else
     logic [RDMA_REQ_BITS-1:0] rdma_sq_data;
 `endif

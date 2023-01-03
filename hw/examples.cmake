@@ -9,7 +9,7 @@ if(NOT EXAMPLE EQUAL 0)
         set(EN_MEM 0)
         set(EN_STRM 1) # Should work with MEM as well
         set(EN_MEM 0)  
-        set(N_REGIONS 3)
+        set(N_REGIONS 1)
     elseif(EXAMPLE STREQUAL "perf_fpga")
         message("** Link benchmarks, fpga initiated. Force config.")
         set(EN_HLS 0)

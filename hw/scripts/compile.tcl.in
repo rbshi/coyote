@@ -41,6 +41,24 @@ if {$cfg(en_pr) eq 1} {
 	eval $cmd
 }
 
+# Bitstream & DCP folder
+exec rm -rf "$build_dir/bitstreams"
+file mkdir "$build_dir/bitstreams"
+exec rm -rf "$build_dir/dcp"
+file mkdir "$build_dir/dcp"
+
+# Enable DFX 
+puts "**** Enable DFX"
+puts "****"
+if {$cfg(en_incr_impl) eq 1} {
+set_property PR_FLOW 1 [current_project] 
+# Set the user_wrapper to greybox
+	for {set j 0}  {$j < $cn} {incr j} {
+		create_partition_def -name user_wrapper_$j -module design_user_wrapper_$j
+		create_reconfig_module -name design_user_wrapper_$j -partition_def [get_partition_defs user_wrapper_$j ] -define_from design_user_wrapper_$j
+	}
+}
+
 puts "**** Launching synthesis ..."
 puts "****"
 
@@ -65,35 +83,11 @@ puts "**** Launching implementation ..."
 puts "****"
 
 # Launch implementation
-if {$cfg(en_pr) eq 1} {
-	set cmd "launch_runs "
-	for {set j 1}  {$j <= $cn} {incr j} {
-		append cmd "impl_$j "
-	}
-} else {
-	set cmd "launch_runs impl_1 "
-}
-append cmd "-to_step write_bitstream -jobs $cfg(cores)"
-eval $cmd
+if {$cfg(en_incr_impl) eq 1} {
+	set cmd "launch_runs impl_1 -to_step route_design -jobs $cfg(cores)"
+	eval $cmd
 
-# Wait on completion
-if {$cfg(en_pr) eq 1} {
-	for {set j 1}  {$j <= $cn} {incr j} {
-		set cmd "wait_on_run impl_$j"
-		eval $cmd
-
-		if {[get_property PROGRESS [get_runs impl_$j]] != "100%"} {   
-			puts "**** CERR: Implementation failed"
-			puts "****"
-			exit 1
-		} else {
-			puts "**** Implementation passed (impl_$j)"
-			puts "****"
-		}
-	}
-} else {
 	wait_on_run impl_1
-
 	if {[get_property PROGRESS [get_runs impl_1]] != "100%"} {   
 		puts "**** CERR: Implementation failed"
 		puts "****"
@@ -102,31 +96,97 @@ if {$cfg(en_pr) eq 1} {
 		puts "**** Implementation passed (impl_1)"
 		puts "****"
 	}
-}
 
-exec rm -rf "$build_dir/bitstreams"
-file mkdir "$build_dir/bitstreams"
+	open_run impl_1 -name impl_1
+	put "***** Shell utilization and timing report generated ($build_dir)"
+	report_utilization -file "$build_dir/shell_utilization.rpt"
+	report_timing_summary -file "$build_dir/shell_timing_summary.rpt"
 
-# Static images
-exec cp "$proj_dir/lynx.runs/impl_1/cyt_top.bit" "$build_dir/bitstreams/cyt_top.bit"
-if { [file exists "$proj_dir/lynx.runs/impl_1/cyt_top.ltx"] == 1} { 
-	exec cp "$proj_dir/lynx.runs/impl_1/cyt_top.ltx" "$build_dir/bitstreams/cyt_top.ltx"
-}
+	# Update all greybox to blackbox for full static region generation
+	for {set j 0}  {$j < $cn} {incr j} {
+		update_design -cell "inst_dynamic/inst_user_wrapper_$j" -black_box
+	}
+	lock_design -level routing
+	write_checkpoint -force "$build_dir/dcp/static_shell.dcp"
 
-# Dynamic images
-if {$cfg(en_pr) eq 1} {
-    for {set j 0}  {$j < $cn} {incr j} {
-        set t [expr {$j + 1}]
-        file mkdir "$build_dir/bitstreams/config_$j"
-        for {set k 0}  {$k < $cfg(n_reg)} {incr k} {
-            exec cp  "$proj_dir/lynx.runs/impl_$t/inst_dynamic\_inst_user_wrapper_$k\_design_user_wrapper_c$j\_$k\_partial.bin" "$build_dir/bitstreams/config_$j/part_bstream_c$j\_$k.bin"
-			exec cp  "$proj_dir/lynx.runs/impl_$t/inst_dynamic\_inst_user_wrapper_$k\_design_user_wrapper_c$j\_$k\_partial.bit" "$build_dir/bitstreams/config_$j/part_bstream_c$j\_$k.bit"
+	# Write bitstream
+	write_bitstream "$build_dir/bitstreams/cyt_top_partial.bit"
+	if { [file exists "$proj_dir/lynx.runs/impl_1/cyt_top.ltx"] == 1} { 
+		exec cp "$proj_dir/lynx.runs/impl_1/cyt_top.ltx" "$build_dir/bitstreams/cyt_top_partial.ltx"
+	}
+	close_design
+
+	open_run impl_1 -name impl_1
+	# Write abstract shell for fast dynamic region implementation
+	for {set j 0}  {$j < $cn} {incr j} {
+		write_abstract_shell -cell "inst_dynamic/inst_user_wrapper_$j" "$build_dir/dcp/user_wrapper_abshell_$j.dcp"
+	}
+	close_design
+
+	puts "**** Design checkpoint (.dcp) written (impl_1)"
+	puts "****"
+
+} else {
+	if {$cfg(en_pr) eq 1} {
+		set cmd "launch_runs "
+		for {set j 1}  {$j <= $cn} {incr j} {
+			append cmd "impl_$j "
 		}
-    }
-}
+	} else {
+		set cmd "launch_runs impl_1 "
+	}
+	append cmd "-to_step write_bitstream -jobs $cfg(cores)"
+	eval $cmd
 
-puts "**** Bitstreams coppied"
-puts "****"
+	# Wait on completion
+	if {$cfg(en_pr) eq 1} {
+		for {set j 1}  {$j <= $cn} {incr j} {
+			set cmd "wait_on_run impl_$j"
+			eval $cmd
+
+			if {[get_property PROGRESS [get_runs impl_$j]] != "100%"} {   
+				puts "**** CERR: Implementation failed"
+				puts "****"
+				exit 1
+			} else {
+				puts "**** Implementation passed (impl_$j)"
+				puts "****"
+			}
+		}
+	} else {
+		wait_on_run impl_1
+
+		if {[get_property PROGRESS [get_runs impl_1]] != "100%"} {   
+			puts "**** CERR: Implementation failed"
+			puts "****"
+			exit 1
+		} else {
+			puts "**** Implementation passed (impl_1)"
+			puts "****"
+		}
+	}
+
+	# Static images
+	exec cp "$proj_dir/lynx.runs/impl_1/cyt_top.bit" "$build_dir/bitstreams/cyt_top.bit"
+	if { [file exists "$proj_dir/lynx.runs/impl_1/cyt_top.ltx"] == 1} { 
+		exec cp "$proj_dir/lynx.runs/impl_1/cyt_top.ltx" "$build_dir/bitstreams/cyt_top.ltx"
+	}
+
+	# Dynamic images
+	if {$cfg(en_pr) eq 1} {
+	    for {set j 0}  {$j < $cn} {incr j} {
+	        set t [expr {$j + 1}]
+	        file mkdir "$build_dir/bitstreams/config_$j"
+	        for {set k 0}  {$k < $cfg(n_reg)} {incr k} {
+	            exec cp  "$proj_dir/lynx.runs/impl_$t/inst_dynamic\_inst_user_wrapper_$k\_design_user_wrapper_c$j\_$k\_partial.bin" "$build_dir/bitstreams/config_$j/part_bstream_c$j\_$k.bin"
+				exec cp  "$proj_dir/lynx.runs/impl_$t/inst_dynamic\_inst_user_wrapper_$k\_design_user_wrapper_c$j\_$k\_partial.bit" "$build_dir/bitstreams/config_$j/part_bstream_c$j\_$k.bit"
+			}
+	    }
+	}
+
+	puts "**** Bitstreams coppied"
+	puts "****"
+}
 
 close_project
 

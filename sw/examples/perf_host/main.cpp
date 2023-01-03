@@ -20,7 +20,7 @@ using namespace std;
 using namespace fpga;
 
 /* Def params */
-constexpr auto const nRegions = 3;
+constexpr auto const nRegions = 1;
 constexpr auto const defHuge = false;
 constexpr auto const defMappped = true;
 constexpr auto const nReps = 100;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
     // Obtain resources
     for (int i = 0; i < n_regions; i++) {
         cproc.emplace_back(new cProcess(i, getpid()));
-        hMem[i] = mapped ? (cproc[i]->getMem({huge ? CoyoteAlloc::HUGE_2M : CoyoteAlloc::REG_4K, n_pages})) 
+        hMem[i] = mapped ? (cproc[i]->getMem({huge ? CoyoteAlloc::HOST_2M : CoyoteAlloc::REG_4K, n_pages})) 
                          : (huge ? (mmap(NULL, max_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0))
                                  : (malloc(max_size)));
     }

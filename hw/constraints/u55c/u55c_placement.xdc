@@ -45,3 +45,7 @@ create_pblock pblk_net_stack_0
 resize_pblock pblk_net_stack_0 -add CLOCKREGION_X1Y4:CLOCKREGION_X3Y7
 add_cells_to_pblock pblk_net_stack_0 [get_cells [list inst_network_top_0/inst_network_stack]]
 
+# pblock for PR dynamic user design
+create_pblock pblock_inst_desing_user
+add_cells_to_pblock [get_pblocks pblock_inst_desing_user] [get_cells -quiet [list inst_dynamic/inst_user_wrapper_0]]
+resize_pblock [get_pblocks pblock_inst_desing_user] -add CLOCKREGION_X0Y1:CLOCKREGION_X3Y3

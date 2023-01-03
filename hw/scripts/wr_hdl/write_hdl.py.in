@@ -21,6 +21,7 @@ arg2 = int(sys.argv[2])
 wrapper_dir = output_dir + '/wrappers'
 common_dir = wrapper_dir + '/common'
 user_wrapper_dir = wrapper_dir + '/config_'
+design_user_wrapper_dir = user_wrapper_dir
 user_logic_dir = output_dir + '/config_'
 
 # Templates
@@ -84,7 +85,7 @@ elif arg1 == 1 :
     for i in range(0, cfg['n_reg']) :
         renderuser('user_wrapper', arg2, i)
         renderuser('user_logic', arg2, i)
-
+        renderuser('design_user_wrapper', arg2, i)
 else :
     # Wrappers
     # Package 
@@ -103,29 +104,34 @@ else :
     # User level
     for i in range(0, cfg['n_config']) :
         for j in range(0, cfg['n_reg']) :
-            # User wrapper
-            renderuser('user_wrapper', i, j)
-            # User logic
-            renderuser('user_logic', i, j)
-            # User hls
-            if cfg['en_hls'] :
-                renderhls(i, j)
+            # if using dfx
+            if cfg['en_incr_impl'] :
+                # Empty design user wrapper
+                renderuser('design_user_wrapper', i, j)
+            else :
+                # User wrapper
+                renderuser('user_wrapper', i, j)
+                # User logic
+                renderuser('user_logic', i, j)
+                # User hls
+                if cfg['en_hls'] :
+                    renderhls(i, j)
 
-            # User examples
-            f_in = open(user_logic_dir + str(i) + '/' + 'user_logic' + '_c' + str(i) + '_' + str(j) + '.sv', "rt")
-            data = f_in.read()
-            ul_start_string = "/* -- USER LOGIC -------------------------------------------------------- */\n"
-            ul_end_string = "/* -- USER LOGIC -------------------------------------------------------- */\n`include \"" + cfg['example'] + '_c' + str(i) + '_' + str(j) + ".svh" + "\""
+                # User examples
+                f_in = open(user_logic_dir + str(i) + '/' + 'user_logic' + '_c' + str(i) + '_' + str(j) + '.sv', "rt")
+                data = f_in.read()
+                ul_start_string = "/* -- USER LOGIC -------------------------------------------------------- */\n"
+                ul_end_string = "/* -- USER LOGIC -------------------------------------------------------- */\n`include \"" + cfg['example'] + '_c' + str(i) + '_' + str(j) + ".svh" + "\""
 
-            if cfg['example'] != '0' :
-                data = data.replace(ul_start_string, ul_end_string)
+                if cfg['example'] != '0' :
+                    data = data.replace(ul_start_string, ul_end_string)
 
-            ###
+                ###
 
-            f_in.close()
-            f_in = open(user_logic_dir + str(i) + '/' + 'user_logic' + '_c' + str(i) + '_' + str(j) + '.sv', "wt")
-            f_in.write(data)
-            f_in.close()
+                f_in.close()
+                f_in = open(user_logic_dir + str(i) + '/' + 'user_logic' + '_c' + str(i) + '_' + str(j) + '.sv', "wt")
+                f_in.write(data)
+                f_in.close()
             
 
                 

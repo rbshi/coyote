@@ -1,0 +1,404 @@
+`timescale 1ns / 1ps
+	 
+import lynxTypes::*;
+
+`include "axi_macros.svh"
+`include "lynx_macros.svh"
+	
+/**
+ * User logic wrapper (empty module)
+ * 
+ */
+module design_user_wrapper_{{ c_reg }} (
+    // AXI4L CONTROL
+    input  logic[AXI_ADDR_BITS-1:0]             axi_ctrl_araddr,
+    input  logic[2:0]                           axi_ctrl_arprot,
+    output logic                                axi_ctrl_arready,
+    input  logic                                axi_ctrl_arvalid,
+    input  logic[AXI_ADDR_BITS-1:0]             axi_ctrl_awaddr,
+    input  logic[2:0]                           axi_ctrl_awprot,
+    output logic                                axi_ctrl_awready,
+    input  logic                                axi_ctrl_awvalid, 
+    input  logic                                axi_ctrl_bready,
+    output logic[1:0]                           axi_ctrl_bresp,
+    output logic                                axi_ctrl_bvalid,
+    output logic[AXI_ADDR_BITS-1:0]             axi_ctrl_rdata,
+    input  logic                                axi_ctrl_rready,
+    output logic[1:0]                           axi_ctrl_rresp,
+    output logic                                axi_ctrl_rvalid,
+    input  logic[AXIL_DATA_BITS-1:0]            axi_ctrl_wdata,
+    output logic                                axi_ctrl_wready,
+    input  logic[(AXIL_DATA_BITS/8)-1:0]        axi_ctrl_wstrb,
+    input  logic                                axi_ctrl_wvalid,
+
+{% if cnfg.en_bpss %}
+    // DESCRIPTOR BYPASS
+{% if cnfg.en_regular_name == 0 %}
+    output logic 							    bpss_rd_req_valid,
+    input  logic 							    bpss_rd_req_ready,
+    output logic [$bits(req_t)-1:0] 		    bpss_rd_req_data,
+    output logic 							    bpss_wr_req_valid,
+    input  logic 							    bpss_wr_req_ready,
+    output logic [$bits(req_t)-1:0] 		    bpss_wr_req_data,
+    input  logic                                bpss_rd_done_valid,
+    output logic                                bpss_rd_done_ready,
+    input  logic [PID_BITS-1:0]                 bpss_rd_done_data,
+    input  logic                                bpss_wr_done_valid,
+    output logic                                bpss_wr_done_ready,
+    input  logic [PID_BITS-1:0]                 bpss_wr_done_data,
+{% else %}
+    output logic                                hostd_bpss_rd_req_valid,
+    input  logic                                hostd_bpss_rd_req_ready,
+    output logic [$bits(req_t)-1:0]             hostd_bpss_rd_req_data,
+    output logic                                hostd_bpss_wr_req_valid,
+    input  logic                                hostd_bpss_wr_req_ready,
+    output logic [$bits(req_t)-1:0]             hostd_bpss_wr_req_data,
+    input  logic                                hostd_bpss_rd_done_valid,
+    output logic                                hostd_bpss_rd_done_ready,
+    input  logic [PID_BITS-1:0]                 hostd_bpss_rd_done_data,
+    input  logic                                hostd_bpss_wr_done_valid,
+    output logic                                hostd_bpss_wr_done_ready,
+    input  logic [PID_BITS-1:0]                 hostd_bpss_wr_done_data,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_strm %}
+{% if cnfg.en_regular_name == 0 %}
+    // AXI4S HOST SINK
+    input  logic[AXI_DATA_BITS-1:0]             axis_host_sink_tdata,
+    input  logic[AXI_DATA_BITS/8-1:0]           axis_host_sink_tkeep,
+    input  logic[PID_BITS-1:0]                  axis_host_sink_tid,
+    input  logic                                axis_host_sink_tlast,
+    output logic                                axis_host_sink_tready,
+    input  logic                                axis_host_sink_tvalid,
+	// AXI4S HOST SOURCE
+    output logic[AXI_DATA_BITS-1:0]             axis_host_src_tdata,
+    output logic[AXI_DATA_BITS/8-1:0]           axis_host_src_tkeep,
+    output logic[PID_BITS-1:0]                  axis_host_src_tid,
+    output logic                                axis_host_src_tlast,
+    input  logic                                axis_host_src_tready,
+    output logic                                axis_host_src_tvalid,
+{% else %}
+    // AXI4S HOST SINK
+    input  logic[AXI_DATA_BITS-1:0]             hostd_axis_host_sink_tdata,
+    input  logic[AXI_DATA_BITS/8-1:0]           hostd_axis_host_sink_tkeep,
+    input  logic                                hostd_axis_host_sink_tlast,
+    output logic                                hostd_axis_host_sink_tready,
+    input  logic                                hostd_axis_host_sink_tvalid,
+    // AXI4S HOST SOURCE
+    output logic[AXI_DATA_BITS-1:0]             hostd_axis_host_src_tdata,
+    output logic[AXI_DATA_BITS/8-1:0]           hostd_axis_host_src_tkeep,
+    output logic                                hostd_axis_host_src_tlast,
+    input  logic                                hostd_axis_host_src_tready,
+    output logic                                hostd_axis_host_src_tvalid,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_mem %}
+    // AXI4S CARD SINK
+    input  logic[AXI_DATA_BITS-1:0]             axis_card_sink_tdata,
+    input  logic[AXI_DATA_BITS/8-1:0]           axis_card_sink_tkeep,
+    input  logic[PID_BITS-1:0]                  axis_card_sink_tid,
+    input  logic                                axis_card_sink_tlast,
+    output logic                                axis_card_sink_tready,
+    input  logic                                axis_card_sink_tvalid,
+    // AXI4S CARD SOURCE
+    output logic[AXI_DATA_BITS-1:0]             axis_card_src_tdata,
+    output logic[AXI_DATA_BITS/8-1:0]           axis_card_src_tkeep,
+    output logic[PID_BITS-1:0]                  axis_card_src_tid,
+    output logic                                axis_card_src_tlast,
+    input  logic                                axis_card_src_tready,
+    output logic                                axis_card_src_tvalid,
+{% endif %}
+
+{% if cnfg.en_mem_bpss %}
+{% for j in range(0, cnfg.n_mem_chan_usr) %}
+    output logic [AXI_ADDR_BITS-1:0]    axi_mem_{{ j }}_araddr,
+    output logic [1:0]                  axi_mem_{{ j }}_arburst,
+    output logic [AXI_ID_BITS-1:0]      axi_mem_{{ j }}_arid,
+    output logic [7:0]                  axi_mem_{{ j }}_arlen,
+    output logic [2:0]                  axi_mem_{{ j }}_arsize,
+    output logic                        axi_mem_{{ j }}_arvalid,
+    input  logic                        axi_mem_{{ j }}_arready,
+
+    input  logic [AXI_DATA_BITS-1:0]    axi_mem_{{ j }}_rdata,
+    input  logic [AXI_ID_BITS-1:0]      axi_mem_{{ j }}_rid,
+    input  logic                        axi_mem_{{ j }}_rlast,
+    input  logic [1:0]                  axi_mem_{{ j }}_rresp,
+    input  logic                        axi_mem_{{ j }}_rvalid,
+    output logic                        axi_mem_{{ j }}_rready,
+
+    output logic [AXI_ADDR_BITS-1:0]    axi_mem_{{ j }}_awaddr,
+    output logic [1:0]                  axi_mem_{{ j }}_awburst,
+    output logic [AXI_ID_BITS-1:0]      axi_mem_{{ j }}_awid,
+    output logic [7:0]                  axi_mem_{{ j }}_awlen,
+    output logic [2:0]                  axi_mem_{{ j }}_awsize,
+    output logic                        axi_mem_{{ j }}_awvalid,
+    input  logic                        axi_mem_{{ j }}_awready,
+
+    output logic [AXI_DATA_BITS-1:0]    axi_mem_{{ j }}_wdata,
+    output logic                        axi_mem_{{ j }}_wlast,
+    output logic [AXI_DATA_BITS/8-1:0]  axi_mem_{{ j }}_wstrb,
+    output logic                        axi_mem_{{ j }}_wvalid,
+    input  logic                        axi_mem_{{ j }}_wready,
+
+    input  logic [AXI_ID_BITS-1:0]      axi_mem_{{ j }}_bid,
+    input  logic [1:0]                  axi_mem_{{ j }}_bresp,
+    input  logic                        axi_mem_{{ j }}_bvalid,
+    output logic                        axi_mem_{{ j }}_bready,        
+{% endfor %}
+{% endif %}
+
+{% if cnfg.en_rdma_0 %}
+    // RDMA QSFP0 CMD
+    input  logic 							    rdma_0_rd_req_valid,
+    output logic 							    rdma_0_rd_req_ready,
+    input  logic [$bits(req_t)-1:0]             rdma_0_rd_req_data,
+    input  logic 							    rdma_0_wr_req_valid,
+    output logic 							    rdma_0_wr_req_ready,
+    input  logic [$bits(req_t)-1:0] 		    rdma_0_wr_req_data,
+
+{% if cnfg.en_rpc %}
+    // RDMA QSFP0 SQ
+    output logic 							    rdma_0_sq_valid,
+    input  logic 							    rdma_0_sq_ready,
+    output logic [$bits(rdma_req_t)-1:0]        rdma_0_sq_data,    
+{% endif %}
+    input  logic                                rdma_0_ack_valid,
+    output logic                                rdma_0_ack_ready,
+    input  logic [$bits(rdma_ack_t)-1:0]        rdma_0_ack_data,
+
+{% if cnfg.en_regular_name == 0 %}
+    // AXI4S RDMA QSFP0 SINK
+    input  logic                                axis_rdma_0_sink_tlast,
+    output logic                                axis_rdma_0_sink_tready,
+    input  logic                                axis_rdma_0_sink_tvalid,
+    input  logic[AXI_NET_BITS-1:0]		        axis_rdma_0_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]	        axis_rdma_0_sink_tkeep,
+    input  logic[PID_BITS-1:0]	                axis_rdma_0_sink_tid,
+    // AXI4S RDMA QSFP0 SOURCE
+    output logic                                axis_rdma_0_src_tlast,
+    input  logic                                axis_rdma_0_src_tready,
+    output logic                                axis_rdma_0_src_tvalid,
+    output logic[AXI_NET_BITS-1:0]		        axis_rdma_0_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]	        axis_rdma_0_src_tkeep,
+    output logic[PID_BITS-1:0]	                axis_rdma_0_src_tid,
+{% else %}
+    // AXI4S RDMA QSFP0 SINK
+    input  logic                                rdma_0_axis_sink_tlast,
+    output logic                                rdma_0_axis_sink_tready,
+    input  logic                                rdma_0_axis_sink_tvalid,
+    input  logic[AXI_NET_BITS-1:0]              rdma_0_axis_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            rdma_0_axis_sink_tkeep,
+    // AXI4S RDMA QSFP0 SOURCE
+    output logic                                rdma_0_axis_src_tlast,
+    input  logic                                rdma_0_axis_src_tready,
+    output logic                                rdma_0_axis_src_tvalid,
+    output logic[AXI_NET_BITS-1:0]              rdma_0_axis_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            rdma_0_axis_src_tkeep,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_rdma_1 %}
+    // RDMA QSFP1 CMD
+    input  logic                                rdma_1_rd_req_valid,
+    output logic                                rdma_1_rd_req_ready,
+    input  logic [$bits(req_t)-1:0]             rdma_1_rd_req_data,
+    input  logic                                rdma_1_wr_req_valid,
+    output logic                                rdma_1_wr_req_ready,
+    input  logic [$bits(req_t)-1:0]             rdma_1_wr_req_data,
+
+{% if cnfg.en_rpc %}
+    // RDMA QSFP1 SQ
+    output logic                                rdma_1_sq_valid,
+    input  logic                                rdma_1_sq_ready,
+    output [$bits(rdma_req_t)-1:0]              rdma_1_sq_data,    
+{% endif %}
+    input  logic                                rdma_1_ack_valid,
+    output logic                                rdma_1_ack_ready,
+    input  [$bits(rdma_ack_t)-1:0]              rdma_1_ack_data,
+
+{% if cnfg.en_regular_name == 0 %}
+    // AXI4S RDMA QSFP1 SINK
+    input  logic                                axis_rdma_1_sink_tlast,
+    output logic                                axis_rdma_1_sink_tready,
+    input  logic                                axis_rdma_1_sink_tvalid,
+    input  logic[AXI_NET_BITS-1:0]              axis_rdma_1_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            axis_rdma_1_sink_tkeep,
+    input  logic[PID_BITS-1:0]                  axis_rdma_1_sink_tid,
+    // AXI4S RDMA QSFP1 SOURCE
+    output logic                                axis_rdma_1_src_tlast,
+    input  logic                                axis_rdma_1_src_tready,
+    output logic                                axis_rdma_1_src_tvalid,
+    output logic[AXI_NET_BITS-1:0]              axis_rdma_1_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            axis_rdma_1_src_tkeep,
+    output logic[PID_BITS-1:0]                  axis_rdma_1_src_tid,
+{% else %}
+    // AXI4S RDMA QSFP1 SINK
+    input  logic                                rdma_1_axis_sink_tlast,
+    output logic                                rdma_1_axis_sink_tready,
+    input  logic                                rdma_1_axis_sink_tvalid,
+    input  logic[AXI_NET_BITS-1:0]              rdma_1_axis_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            rdma_1_axis_sink_tkeep,
+    // AXI4S RDMA QSFP1 SOURCE
+    output logic                                rdma_1_axis_src_tlast,
+    input  logic                                rdma_1_axis_src_tready,
+    output logic                                rdma_1_axis_src_tvalid,
+    output logic[AXI_NET_BITS-1:0]              rdma_1_axis_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            rdma_1_axis_src_tkeep,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_tcp_0 %}
+    // TCP/IP QSFP0 CMD
+    output logic 						        tcp_0_listen_req_valid,
+    input  logic 						        tcp_0_listen_req_ready,
+    output logic[TCP_PORT_REQ_BITS-1:0]	        tcp_0_listen_req_data,
+    input  logic 						        tcp_0_listen_rsp_valid,
+    output logic 						        tcp_0_listen_rsp_ready,
+    input  logic[TCP_PORT_RSP_BITS-1:0]	        tcp_0_listen_rsp_data,
+    output logic 						        tcp_0_open_req_valid,
+    input  logic 						        tcp_0_open_req_ready,
+    output logic[TCP_OPEN_CONN_REQ_BITS-1:0]    tcp_0_open_req_data,
+    input  logic 						        tcp_0_open_rsp_valid,
+    output logic 						        tcp_0_open_rsp_ready,
+    input  logic[TCP_OPEN_CONN_RSP_BITS-1:0]    tcp_0_open_rsp_data,
+    output logic 						        tcp_0_close_req_valid,
+    input  logic 						        tcp_0_close_req_ready,
+    output logic[TCP_CLOSE_CONN_REQ_BITS-1:0]   tcp_0_close_req_data,
+    input  logic 						        tcp_0_notify_valid,
+    output logic 						        tcp_0_notify_ready,
+    input  logic[TCP_NOTIFY_BITS-1:0]           tcp_0_notify_data,
+    output logic 						        tcp_0_rd_pkg_valid,
+    input  logic 						        tcp_0_rd_pkg_ready,
+    output logic[TCP_RD_PKG_REQ_BITS-1:0]       tcp_0_rd_pkg_data,
+    input  logic 						        tcp_0_rx_meta_valid,
+    output logic 						        tcp_0_rx_meta_ready,
+    input  logic[TCP_RX_META_BITS-1:0]          tcp_0_rx_meta_data,
+    output logic 						        tcp_0_tx_meta_valid,
+    input  logic 						        tcp_0_tx_meta_ready,
+    output logic[TCP_TX_META_BITS-1:0]	        tcp_0_tx_meta_data,
+    input  logic 						        tcp_0_tx_stat_valid,
+    output logic 						        tcp_0_tx_stat_ready,
+    input  logic[TCP_TX_STAT_BITS-1:0]          tcp_0_tx_stat_data,
+{% if cnfg.en_regular_name == 0 %}
+    // AXI4S TCP/IP QSFP0 SINK
+    input  logic[AXI_NET_BITS-1:0]              axis_tcp_0_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            axis_tcp_0_sink_tkeep,
+    input  logic[PID_BITS-1:0]                  axis_tcp_0_sink_tid,
+    input  logic                                axis_tcp_0_sink_tlast,
+    output logic                                axis_tcp_0_sink_tready,
+    input  logic                                axis_tcp_0_sink_tvalid,
+    // AXI4S TCP/IP QSFP0 SOURCE
+    output logic[AXI_NET_BITS-1:0]              axis_tcp_0_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            axis_tcp_0_src_tkeep,
+    output logic[PID_BITS-1:0]                  axis_tcp_0_src_tid,
+    output logic                                axis_tcp_0_src_tlast,
+    input  logic                                axis_tcp_0_src_tready,
+    output logic                                axis_tcp_0_src_tvalid,
+{% else %}
+    // AXI4S TCP/IP QSFP0 SINK
+    input  logic[AXI_NET_BITS-1:0]              tcp_0_axis_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            tcp_0_axis_sink_tkeep,
+    input  logic                                tcp_0_axis_sink_tlast,
+    output logic                                tcp_0_axis_sink_tready,
+    input  logic                                tcp_0_axis_sink_tvalid,
+    // AXI4S TCP/IP QSFP0 SOURCE
+    output logic[AXI_NET_BITS-1:0]              tcp_0_axis_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            tcp_0_axis_src_tkeep,
+    output logic                                tcp_0_axis_src_tlast,
+    input  logic                                tcp_0_axis_src_tready,
+    output logic                                tcp_0_axis_src_tvalid,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_tcp_1 %}
+    // TCP/IP QSFP1 CMD
+    output logic 						        tcp_1_listen_req_valid,
+    input  logic 						        tcp_1_listen_req_ready,
+    output logic[TCP_PORT_REQ_BITS-1:0]	        tcp_1_listen_req_data,
+    input  logic 						        tcp_1_listen_rsp_valid,
+    output logic 						        tcp_1_listen_rsp_ready,
+    input  logic[TCP_PORT_RSP_BITS-1:0]	        tcp_1_listen_rsp_data,
+    output logic 						        tcp_1_open_req_valid,
+    input  logic 						        tcp_1_open_req_ready,
+    output logic[TCP_OPEN_CONN_REQ_BITS-1:0]    tcp_1_open_req_data,
+    input  logic 						        tcp_1_open_rsp_valid,
+    output logic 						        tcp_1_open_rsp_ready,
+    input  logic[TCP_OPEN_CONN_RSP_BITS-1:0]    tcp_1_open_rsp_data,
+    output logic 						        tcp_1_close_req_valid,
+    input  logic 						        tcp_1_close_req_ready,
+    output logic[TCP_CLOSE_CONN_REQ_BITS-1:0]   tcp_1_close_req_data,
+    input  logic 						        tcp_1_notify_valid,
+    output logic 						        tcp_1_notify_ready,
+    input  logic[TCP_NOTIFY_BITS-1:0]           tcp_1_notify_data,
+    output logic 						        tcp_1_rd_pkg_valid,
+    input  logic 						        tcp_1_rd_pkg_ready,
+    output logic[TCP_RD_PKG_REQ_BITS-1:0]       tcp_1_rd_pkg_data,
+    input  logic 						        tcp_1_rx_meta_valid,
+    output logic 						        tcp_1_rx_meta_ready,
+    input  logic[TCP_RX_META_BITS-1:0]          tcp_1_rx_meta_data,
+    output logic 						        tcp_1_tx_meta_valid,
+    input  logic 						        tcp_1_tx_meta_ready,
+    output logic[TCP_TX_META_BITS-1:0]	        tcp_1_tx_meta_data,
+    input  logic 						        tcp_1_tx_stat_valid,
+    output logic 						        tcp_1_tx_stat_ready,
+    input  logic[TCP_TX_STAT_BITS-1:0]          tcp_1_tx_stat_data,
+{% if cnfg.en_regular_name == 0 %}
+    // AXI4S TCP/IP QSFP1 SINK
+    input  logic[AXI_NET_BITS-1:0]              axis_tcp_1_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            axis_tcp_1_sink_tkeep,
+    input  logic[PID_BITS-1:0]                  axis_tcp_1_sink_tid,
+    input  logic                                axis_tcp_1_sink_tlast,
+    output logic                                axis_tcp_1_sink_tready,
+    input  logic                                axis_tcp_1_sink_tvalid,
+    // AXI4S TCP/IP QSFP1 SOURCE
+    output logic[AXI_NET_BITS-1:0]              axis_tcp_1_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            axis_tcp_1_src_tkeep,
+    output logic[PID_BITS-1:0]                  axis_tcp_1_src_tid;
+    output logic                                axis_tcp_1_src_tlast,
+    input  logic                                axis_tcp_1_src_tready,
+    output logic                                axis_tcp_1_src_tvalid,
+{% else %}
+    // AXI4S TCP/IP QSFP1 SINK
+    input  logic[AXI_NET_BITS-1:0]              tcp_1_axis_sink_tdata,
+    input  logic[AXI_NET_BITS/8-1:0]            tcp_1_axis_sink_tkeep,
+    input  logic                                tcp_1_axis_sink_tlast,
+    output logic                                tcp_1_axis_sink_tready,
+    input  logic                                tcp_1_axis_sink_tvalid,
+    // AXI4S TCP/IP QSFP1 SOURCE
+    output logic[AXI_NET_BITS-1:0]              tcp_1_axis_src_tdata,
+    output logic[AXI_NET_BITS/8-1:0]            tcp_1_axis_src_tkeep,
+    output logic                                tcp_1_axis_src_tlast,
+    input  logic                                tcp_1_axis_src_tready,
+    output logic                                tcp_1_axis_src_tvalid,
+{% endif %}
+{% endif %}
+
+{% if cnfg.en_regular_name == 0 %}
+    // BSCAN
+    input  logic                                S_BSCAN_drck,
+    input  logic                                S_BSCAN_shift,
+    input  logic                                S_BSCAN_tdi,
+    input  logic                                S_BSCAN_update,
+    input  logic                                S_BSCAN_sel,
+    output logic                                S_BSCAN_tdo,
+    input  logic                                S_BSCAN_tms,
+    input  logic                                S_BSCAN_tck,
+    input  logic                                S_BSCAN_runtest,
+    input  logic                                S_BSCAN_reset,
+    input  logic                                S_BSCAN_capture,
+    input  logic                                S_BSCAN_bscanid_en,
+    // Clock and reset
+    input  logic                                aclk,
+    input  logic                                aresetn
+{% else %}
+    // Clock and reset
+    input  logic                                clk,
+    input  logic                                resetn
+{% endif %}
+);
+
+
+endmodule
+	
