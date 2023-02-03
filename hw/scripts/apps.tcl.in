@@ -9,6 +9,12 @@ switch $cfg(apps) {
         add_files "$dlm_dir/generated_rtl/linked_list_pkg_$cfg(apps_config).sv"
     }
 
+    "dedup" {
+        puts "App: Deduplication"
+        set dedup_dir "$::env(HOME)/Workspace/hw/dedup"
+        add_files "$dedup_dir/generated_rtl/dedup_$cfg(apps_config).v"
+    }
+
     default {
         puts "No application chosen"
     }

@@ -45,3 +45,9 @@ create_pblock pblk_net_stack_0
 resize_pblock pblk_net_stack_0 -add CLOCKREGION_X1Y4:CLOCKREGION_X3Y7
 add_cells_to_pblock pblk_net_stack_0 [get_cells [list inst_network_top_0/inst_network_stack]]
 
+# app: dedup
+create_pblock slr1
+resize_pblock slr1 -add CLOCKREGION_X0Y4:CLOCKREGION_X7Y7
+add_cells_to_pblock slr1 [get_cells [list inst_dynamic/inst_dedup/dedupCore]]
+
+
