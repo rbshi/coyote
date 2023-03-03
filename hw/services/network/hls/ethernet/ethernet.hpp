@@ -29,8 +29,10 @@
 
 #include "../packet.hpp"
 
-const int ETH_HEADER_SIZE = 112;
+// #define VLANTAG
 
+#ifndef VLANTAG
+const int ETH_HEADER_SIZE = 112;
 /**
  * [47:0] MAC destination
  * [95:48] MAC source
@@ -58,5 +60,43 @@ public:
 		return reverse((ap_uint<16>)header(111,96));
 	}
 };
+#else
+const int ETH_HEADER_SIZE = 144;
+const int ETH_HEADER_WOVLAN_SIZE = 112;
+/**
+ * [47:0] MAC destination
+ * [95:48] MAC source
+ * [127:96] 802.1Q tag
+ * [143:128] Ethertype
+ */ 
+template <int W>
+class ethHeader : public packetHeader<W, ETH_HEADER_SIZE> {
+    using packetHeader<W, ETH_HEADER_SIZE>::header;
+
+public:
+    void setDstAddress(ap_uint<48> addr)
+    {
+        header(47,0) = addr;
+    }
+    void setSrcAddress(ap_uint<48> addr)
+    {
+        header(95,48) = addr;
+    }
+    void setVlanTag(ap_uint<32> vlantag)
+    {
+        header(127,96) = reverse(vlantag);
+    }
+    void setEthertype(ap_uint<16> type)
+    {
+        header(143,128) = reverse(type);
+    }
+    /** VLAN tag is removed for receiver on access port*/
+    ap_uint<16> getEthertype()
+    {
+        return reverse((ap_uint<16>)header(111,96));
+    }
+};
+
+#endif
 
 #endif

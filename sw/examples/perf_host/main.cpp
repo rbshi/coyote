@@ -20,7 +20,7 @@ using namespace std;
 using namespace fpga;
 
 /* Def params */
-constexpr auto const nRegions = 3;
+constexpr auto const nRegions = 1;
 constexpr auto const defHuge = false;
 constexpr auto const defMappped = true;
 constexpr auto const nReps = 100;

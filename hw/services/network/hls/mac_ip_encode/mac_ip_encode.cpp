@@ -163,6 +163,9 @@ void handle_arp_reply (	hls::stream<arpTableReply>&		arpTableIn,
 				header.clear();
 				header.setDstAddress(reply.macAddress);
 				header.setSrcAddress(myMacAddress);
+#ifdef VLANTAG
+				header.setVlanTag(0x8100E000);
+#endif
 				header.setEthertype(0x0800);
 				headerOut.write(header);
 
@@ -299,6 +302,9 @@ void generate_ethernet(	hls::stream<net_axis<WIDTH> >&		dataIn,
 			{
 				header.setDstAddress(reply.macAddress);
 				header.setSrcAddress(myMacAddress);
+#ifdef VLANTAG
+				header.setVlanTag(0x8100E000);
+#endif
 				header.setEthertype(0x0800);
 				if (ETH_HEADER_SIZE >= WIDTH)
 				{

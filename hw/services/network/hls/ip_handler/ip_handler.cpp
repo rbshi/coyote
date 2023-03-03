@@ -531,8 +531,13 @@ void ip_handler(hls::stream<net_axis<WIDTH> >&		s_axis_raw,
 	detect_eth_protocol(s_axis_raw, etherTypeFifo, ethDataFifo);
 
 	route_by_eth_protocol(etherTypeFifo, ethDataFifo, m_axis_ARP, ipv4ShiftFifo, ipv6ShiftFifo);
-	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 1>(((ETH_HEADER_SIZE%WIDTH)/8), ipv4ShiftFifo, ipDataFifo);	
-	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 3>(((ETH_HEADER_SIZE%WIDTH)/8), ipv6ShiftFifo, ipv6DataFifo);	
+#ifdef VLANTAG
+	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 1>(((ETH_HEADER_WOVLAN_SIZE%WIDTH)/8), ipv4ShiftFifo, ipDataFifo);
+	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 3>(((ETH_HEADER_WOVLAN_SIZE%WIDTH)/8), ipv6ShiftFifo, ipv6DataFifo);
+#else 
+	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 1>(((ETH_HEADER_SIZE%WIDTH)/8), ipv4ShiftFifo, ipDataFifo);
+	ip_handler_rshiftWordByOctet<net_axis<WIDTH>, WIDTH, 3>(((ETH_HEADER_SIZE%WIDTH)/8), ipv6ShiftFifo, ipv6DataFifo);
+#endif
 	
 	extract_ip_meta(ipDataFifo, ipDataMetaFifo, ipv4ProtocolFifo, validIpAddressFifo, myIpAddress);
 
