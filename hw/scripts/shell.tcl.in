@@ -132,8 +132,8 @@ if {$cfg(en_net_1)} {
 # placement constraints
 if {$cfg(fdev) eq "u280" || $cfg(fdev) eq "u55c"} {
     add_files -norecurse -fileset [get_filesets constrs_1] "$hw_dir/constraints/$cfg(fdev)/$cfg(fdev)_placement.xdc"
+    set_property used_in_synthesis false [get_files "$cfg(fdev)_placement.xdc"]
 }
-set_property used_in_synthesis false [get_files "$cfg(fdev)_placement.xdc"]
 
 
 # Create a project-local constraint file to take debugging constraints that we
