@@ -188,6 +188,8 @@ set(EN_STATS 1 CACHE STRING "Enable sysfs statistics.")
 
 # DDR/HBM AXI params
 set(AXI_ID_BITS 1 CACHE STRING "Bitwidth of axi ar/aw_id")
+# Net dropper
+set(NET_DROP 0 CACHE STRING "Network dropper.")
 
 # Reg stages
 set(NR_DH_S0 4 CACHE STRING "Dynamic host stage 0.")
