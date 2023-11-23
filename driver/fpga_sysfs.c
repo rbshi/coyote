@@ -136,6 +136,34 @@ ssize_t cyt_attr_mac_q1_store(struct kobject *kobj, struct kobj_attribute *attr,
 }
 
 /**
+ * @brief Sysfs read EOST 
+ * 
+ */
+ssize_t cyt_attr_eost_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf) {   
+  struct bus_drvdata *pd = container_of(kobj, struct bus_drvdata, cyt_kobj);
+  BUG_ON(!pd); 
+
+  pr_info("coyote-sysfs:  current EOS time [clks]: %lld\n", pd->eost);
+  return sprintf(buf, "EOST: %lld\n", pd->eost);
+}
+
+/**
+ * @brief Sysfs write IP QSFP1
+ * 
+ */
+ssize_t cyt_attr_eost_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count) {
+  struct bus_drvdata *pd = container_of(kobj, struct bus_drvdata, cyt_kobj);
+    BUG_ON(!pd); 
+
+    sscanf(buf,"%lld",&pd->eost);
+    pr_info("coyote-sysfs:  setting EOST to: %lld\n", pd->eost);
+    pd->fpga_stat_cnfg->pr_eost = eost;
+
+    return count;
+}
+
+
+/**
  * @brief Sysfs read net stats QSFP0
  * 
  */
@@ -145,9 +173,7 @@ ssize_t cyt_attr_nstats_q0_show(struct kobject *kobj, struct kobj_attribute *att
 
   pr_info("coyote-sysfs:  net stats QSFP0\n");
   return sprintf(buf, "\n -- \033[31m\e[1mNET STATS\033[0m\e[0m QSFP0\n\n"
-    "RX words: %lld\n"
     "RX pkgs: %lld\n"
-    "TX words: %lld\n"
     "TX pkgs: %lld\n"
     "ARP RX pkgs: %lld\n"
     "ARP TX pkgs: %lld\n"
@@ -159,10 +185,10 @@ ssize_t cyt_attr_nstats_q0_show(struct kobject *kobj, struct kobj_attribute *att
     "ROCE TX pkgs: %lld\n"
     "IBV RX pkgs: %lld\n"
     "IBV TX pkgs: %lld\n"
-    "CRC drop cnt: %lld\n"
     "PSN drop cnt: %lld\n"
+    "Retrans cnt: %lld\n"
     "TCP session cnt: %lld\n"
-    "STRM down cnt: %lld\n\n", 
+    "STRM down: %lld\n\n", 
     
     LOW_32 (pd->fpga_stat_cnfg->net_0_debug[0]),
     HIGH_32(pd->fpga_stat_cnfg->net_0_debug[0]),
@@ -179,9 +205,7 @@ ssize_t cyt_attr_nstats_q0_show(struct kobject *kobj, struct kobj_attribute *att
     LOW_32 (pd->fpga_stat_cnfg->net_0_debug[6]),
     HIGH_32(pd->fpga_stat_cnfg->net_0_debug[6]),
     LOW_32 (pd->fpga_stat_cnfg->net_0_debug[7]),
-    HIGH_32(pd->fpga_stat_cnfg->net_0_debug[7]),
-    LOW_32 (pd->fpga_stat_cnfg->net_0_debug[8]),
-    LOW_32 (pd->fpga_stat_cnfg->net_0_debug[9]) 
+    LOW_32 (pd->fpga_stat_cnfg->net_0_debug[8]) 
   );
 }
 
@@ -195,9 +219,7 @@ ssize_t cyt_attr_nstats_q1_show(struct kobject *kobj, struct kobj_attribute *att
 
   pr_info("coyote-sysfs:  net stats QSFP1\n");
   return sprintf(buf, "\n -- \033[31m\e[1mNET STATS\033[0m\e[0m QSFP1\n\n"
-    "RX words: %lld\n"
     "RX pkgs: %lld\n"
-    "TX words: %lld\n"
     "TX pkgs: %lld\n"
     "ARP RX pkgs: %lld\n"
     "ARP TX pkgs: %lld\n"
@@ -209,10 +231,10 @@ ssize_t cyt_attr_nstats_q1_show(struct kobject *kobj, struct kobj_attribute *att
     "ROCE TX pkgs: %lld\n"
     "IBV RX pkgs: %lld\n"
     "IBV TX pkgs: %lld\n"
-    "CRC drop cnt: %lld\n"
     "PSN drop cnt: %lld\n"
+    "Retrans cnt: %lld\n"
     "TCP session cnt: %lld\n"
-    "STRM down cnt: %lld\n\n",
+    "STRM down: %lld\n\n", 
     
     LOW_32 (pd->fpga_stat_cnfg->net_1_debug[0]),
     HIGH_32(pd->fpga_stat_cnfg->net_1_debug[0]),
@@ -229,9 +251,7 @@ ssize_t cyt_attr_nstats_q1_show(struct kobject *kobj, struct kobj_attribute *att
     LOW_32 (pd->fpga_stat_cnfg->net_1_debug[6]),
     HIGH_32(pd->fpga_stat_cnfg->net_1_debug[6]),
     LOW_32 (pd->fpga_stat_cnfg->net_1_debug[7]),
-    HIGH_32(pd->fpga_stat_cnfg->net_1_debug[7]),
-    LOW_32 (pd->fpga_stat_cnfg->net_1_debug[8]),
-    LOW_32 (pd->fpga_stat_cnfg->net_1_debug[9]) 
+    LOW_32 (pd->fpga_stat_cnfg->net_1_debug[8]) 
   );
 }
 

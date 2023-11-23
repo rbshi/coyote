@@ -35,6 +35,8 @@ module static_slave (
   // DMA 
   dmaIntf.m                 m_pr_dma_rd_req,
   dmaIntf.m                 m_pr_dma_wr_req,
+  input  logic              eos,
+  output logic [31:0]       eos_time,
 `endif
 
 `ifdef EN_TLBF
@@ -143,7 +145,7 @@ module static_slave (
 // ------------------------------------------------------------------
 
 // Constants
-localparam integer N_REGS = 128;
+localparam integer N_REGS = 160;
 localparam integer ADDR_LSB = $clog2(AXIL_DATA_BITS/8);
 localparam integer ADDR_MSB = $clog2(N_REGS);
 localparam integer AXIL_ADDR_BITS = ADDR_LSB + ADDR_MSB;
@@ -228,26 +230,29 @@ localparam integer PR_CTRL_REG            = 10;
 // 11 (RO) : Status
 localparam integer PR_STAT_REG            = 11;
   localparam integer PR_DONE   = 0;
-  localparam integer PR_READY  = 1;
+  localparam integer PR_DDMA   = 1;
+  localparam integer PR_READY  = 2;
 // 12 (RW) : Physical address
 localparam integer PR_ADDR_REG            = 12;
 // 13 (RW) : Length read
 localparam integer PR_LEN_REG             = 13;
+// 14 (RW) : PR end of startup time
+localparam integer PR_EOST_REG            = 14;
 // TLB
 // 14 (W1S) : TLB control
-localparam integer TLB_CTRL_REG           = 14;
+localparam integer TLB_CTRL_REG           = 15;
   localparam integer TLB_START  = 0;
   localparam integer TLB_CTL    = 1;
   localparam integer TLB_CLR    = 2;
-  localparam integer TLB_ID_OFFS          = 16;
+  localparam integer TLB_ID_OFFS = 16;
 // 15 (RO) : Status
-localparam integer TLB_STAT_REG           = 15;
+localparam integer TLB_STAT_REG           = 16;
   localparam integer TLB_DONE   = 0;
   localparam integer TLB_READY  = 1;
 // 16 (RW) : Physical address
-localparam integer TLB_ADDR_REG           = 16;
+localparam integer TLB_ADDR_REG           = 17;
 // 17 (RW) : Length read
-localparam integer TLB_LEN_REG            = 17;
+localparam integer TLB_LEN_REG            = 18;
 // NETWORK QSFP 0
 // 20 (RW) : IP address
 localparam integer NET_0_IPADDR_REG       = 20;
@@ -311,28 +316,27 @@ localparam integer XDMA_STAT_2_AXIS       = 72;
 localparam integer XDMA_STAT_3_BPSS       = 73;
 localparam integer XDMA_STAT_3_CMPL       = 74;
 localparam integer XDMA_STAT_3_AXIS       = 75;
-// NET STATS
-localparam integer NET_STAT_0_RX_REG      = 96;
-localparam integer NET_STAT_0_TX_REG      = 97;
-localparam integer NET_STAT_0_ARP_REG     = 98;
-localparam integer NET_STAT_0_ICMP_REG    = 99;
-localparam integer NET_STAT_0_TCP_REG     = 100;
-localparam integer NET_STAT_0_RDMA_REG    = 101;
-localparam integer NET_STAT_0_IBV_REG     = 102;
-localparam integer NET_STAT_0_DROP_REG    = 103;
-localparam integer NET_STAT_0_SESS_REG    = 104;
-localparam integer NET_STAT_0_DOWN_REG    = 105;
 
-localparam integer NET_STAT_1_RX_REG      = 112;
-localparam integer NET_STAT_1_TX_REG      = 113;
-localparam integer NET_STAT_1_ARP_REG     = 114;
-localparam integer NET_STAT_1_ICMP_REG    = 115;
-localparam integer NET_STAT_1_TCP_REG     = 116;
-localparam integer NET_STAT_1_RDMA_REG    = 117;
-localparam integer NET_STAT_1_IBV_REG     = 118;
-localparam integer NET_STAT_1_DROP_REG    = 119;
-localparam integer NET_STAT_1_SESS_REG    = 120;
-localparam integer NET_STAT_1_DOWN_REG    = 121;
+// NET STATS
+localparam integer NET_STAT_0_PKG_REG     = 96;
+localparam integer NET_STAT_0_ARP_REG     = 97;
+localparam integer NET_STAT_0_ICMP_REG    = 98;
+localparam integer NET_STAT_0_TCP_REG     = 99;
+localparam integer NET_STAT_0_RDMA_REG    = 100;
+localparam integer NET_STAT_0_IBV_REG     = 101;
+localparam integer NET_STAT_0_DROP_REG    = 102;
+localparam integer NET_STAT_0_SESS_REG    = 103;
+localparam integer NET_STAT_0_DOWN_REG    = 104;
+
+localparam integer NET_STAT_1_PKG_REG     = 128;
+localparam integer NET_STAT_1_ARP_REG     = 129;
+localparam integer NET_STAT_1_ICMP_REG    = 130;
+localparam integer NET_STAT_1_TCP_REG     = 131;
+localparam integer NET_STAT_1_RDMA_REG    = 132;
+localparam integer NET_STAT_1_IBV_REG     = 133;
+localparam integer NET_STAT_1_DROP_REG    = 134;
+localparam integer NET_STAT_1_SESS_REG    = 135;
+localparam integer NET_STAT_1_DOWN_REG    = 136;
 
 // ---------------------------------------------------------------------------------------- 
 // Write process 
@@ -348,6 +352,7 @@ always_ff @(posedge aclk) begin
 `ifdef EN_PR
     slv_reg[PR_CTRL_REG][15:0] <= 0;
     slv_reg[PR_STAT_REG][15:0] <= 0;
+    slv_reg[PR_EOST_REG] <= RECONFIG_EOS_TIME;
 `endif
 
 `ifdef EN_TLBF
@@ -404,9 +409,11 @@ always_ff @(posedge aclk) begin
 
   end
   else begin
+
 `ifdef EN_PR
     slv_reg[PR_CTRL_REG][15:0] <= 0;
     slv_reg[PR_STAT_REG][PR_DONE] <= slv_reg[PR_CTRL_REG][PR_CLR] ? 1'b0 : pr_req.rsp.done ? 1'b1 : slv_reg[PR_STAT_REG][PR_DONE];
+    slv_reg[PR_STAT_REG][PR_DDMA] <= slv_reg[PR_CTRL_REG][PR_CLR] ? 1'b0 : m_pr_dma_rd_req.rsp.done ? 1'b1 : slv_reg[PR_STAT_REG][PR_DDMA];
 `endif
 
 `ifdef EN_TLBF
@@ -464,7 +471,7 @@ always_ff @(posedge aclk) begin
 
 `ifdef EN_PR  
         PR_CTRL_REG: // PR control
-          for (int i = 0; i < 2; i++) begin
+          for (int i = 0; i < AXIL_DATA_BITS/8; i++) begin
             if(s_axi_ctrl.wstrb[i]) begin
               slv_reg[PR_CTRL_REG][(i*8)+:8] <= s_axi_ctrl.wdata[(i*8)+:8];
             end
@@ -479,6 +486,12 @@ always_ff @(posedge aclk) begin
           for (int i = 0; i < 4; i++) begin
             if(s_axi_ctrl.wstrb[i]) begin
               slv_reg[PR_LEN_REG][(i*8)+:8] <= s_axi_ctrl.wdata[(i*8)+:8];
+            end
+          end
+        PR_EOST_REG: // PR eost
+          for (int i = 0; i < AXIL_DATA_BITS/8; i++) begin
+            if(s_axi_ctrl.wstrb[i]) begin
+              slv_reg[PR_EOST_REG][(i*8)+:8] <= s_axi_ctrl.wdata[(i*8)+:8];
             end
           end
 `endif
@@ -768,11 +781,13 @@ always_ff @(posedge aclk) begin
         
 `ifdef EN_PR
         PR_STAT_REG:
-          axi_rdata[1:0] <= {pr_req.ready, slv_reg[PR_STAT_REG][PR_DONE]};
+          axi_rdata[2:0] <= {pr_req.ready, slv_reg[PR_STAT_REG][PR_DDMA], slv_reg[PR_STAT_REG][PR_DONE]};
         PR_ADDR_REG:
           axi_rdata <= slv_reg[PR_ADDR_REG];
         PR_LEN_REG:
           axi_rdata[31:0] <= slv_reg[PR_LEN_REG][31:0];
+        PR_EOST_REG:
+          axi_rdata <= slv_reg[PR_EOST_REG];
 `endif
 
 `ifdef EN_TLBF
@@ -867,10 +882,8 @@ always_ff @(posedge aclk) begin
   `endif
 
   `ifdef EN_NET_0
-          NET_STAT_0_RX_REG: // rx
-            axi_rdata <= {s_net_stats_0.rx_pkg_counter, s_net_stats_0.rx_word_counter};
-          NET_STAT_0_TX_REG: // tx
-            axi_rdata <= {s_net_stats_0.tx_pkg_counter, s_net_stats_0.tx_word_counter}; 
+          NET_STAT_0_PKG_REG: // rx and tx
+            axi_rdata <= {s_net_stats_0.tx_pkg_counter, s_net_stats_0.rx_pkg_counter};
           NET_STAT_0_ARP_REG: // arp
             axi_rdata <= {s_net_stats_0.arp_tx_pkg_counter, s_net_stats_0.arp_rx_pkg_counter}; 
           NET_STAT_0_ICMP_REG: // icmp
@@ -882,18 +895,16 @@ always_ff @(posedge aclk) begin
           NET_STAT_0_IBV_REG: // ibv
             axi_rdata <= {s_net_stats_0.ibv_tx_pkg_counter, s_net_stats_0.ibv_rx_pkg_counter}; 
           NET_STAT_0_DROP_REG: // rdma drop
-            axi_rdata <= {s_net_stats_0.roce_psn_drop_counter, s_net_stats_0.roce_crc_drop_counter}; 
+            axi_rdata <= {s_net_stats_0.roce_retrans_counter, s_net_stats_0.roce_psn_drop_counter}; 
           NET_STAT_0_SESS_REG: // tcp sessions
             axi_rdata[31:0] <= s_net_stats_0.tcp_session_counter; 
           NET_STAT_0_DOWN_REG: // rdma
-            axi_rdata <= {{31{1'b0}}, s_net_stats_0.axis_stream_down, {24{1'b0}}, s_net_stats_0.axis_stream_down_counter}; 
+            axi_rdata[0] <= s_net_stats_0.axis_stream_down;
   `endif
 
   `ifdef EN_NET_1
-          NET_STAT_1_RX_REG: // rx
-            axi_rdata <= {s_net_stats_1.rx_pkg_counter, s_net_stats_1.rx_word_counter};
-          NET_STAT_1_TX_REG: // tx
-            axi_rdata <= {s_net_stats_1.tx_pkg_counter, s_net_stats_1.tx_word_counter}; 
+          NET_STAT_1_PKG_REG: // rx and tx
+            axi_rdata <= {s_net_stats_1.tx_pkg_counter, s_net_stats_1.rx_pkg_counter};
           NET_STAT_1_ARP_REG: // arp
             axi_rdata <= {s_net_stats_1.arp_tx_pkg_counter, s_net_stats_1.arp_rx_pkg_counter}; 
           NET_STAT_1_ICMP_REG: // icmp
@@ -905,11 +916,11 @@ always_ff @(posedge aclk) begin
           NET_STAT_1_IBV_REG: // ibv
             axi_rdata <= {s_net_stats_1.ibv_tx_pkg_counter, s_net_stats_1.ibv_rx_pkg_counter}; 
           NET_STAT_1_DROP_REG: // rdma drop
-            axi_rdata <= {s_net_stats_1.roce_psn_drop_counter, s_net_stats_1.roce_crc_drop_counter}; 
+            axi_rdata <= {s_net_stats_1.roce_retrans_counter, s_net_stats_1.roce_psn_drop_counter}; 
           NET_STAT_1_SESS_REG: // tcp sessions
             axi_rdata[31:0] <= s_net_stats_1.tcp_session_counter; 
           NET_STAT_1_DOWN_REG: // rdma
-            axi_rdata <= {{31{1'b0}}, s_net_stats_1.axis_stream_down, {24{1'b0}}, s_net_stats_1.axis_stream_down_counter}; 
+            axi_rdata[0] <= s_net_stats_1.axis_stream_down;
   `endif
 
 `endif
@@ -936,11 +947,14 @@ always_comb begin
   pr_req.req.paddr = slv_reg[PR_ADDR_REG][PADDR_BITS-1:0];
   pr_req.req.len = slv_reg[PR_LEN_REG][LEN_BITS-1:0];
   // Done signal
-  pr_req.rsp.done = m_pr_dma_rd_req.rsp.done;
+  pr_req.rsp.done = eos;
 
   // Tie-off write channel
   m_pr_dma_wr_req.valid = 1'b0;
   m_pr_dma_wr_req.req = 0;
+
+  // EOS time
+  eos_time = slv_reg[PR_EOST_REG][31:0];
 end
 
 // DMA out
@@ -1076,10 +1090,9 @@ end
 `ifdef EN_RDMA_0
 
 // RDMA qp interface
-assign m_rdma_0_qp_interface.data[0+:51] = slv_reg[RDMA_0_CTX_REG_0][50:0]; // remote psn, local qpn, qp state 
-assign m_rdma_0_qp_interface.data[51+:40] = slv_reg[RDMA_0_CTX_REG_1][39:0]; // remote key, local psn
-assign m_rdma_0_qp_interface.data[91+:48] = slv_reg[RDMA_0_CTX_REG_2][47:0]; // vaddr
-assign m_rdma_0_qp_interface.data[139+:5] = 0;
+assign m_rdma_0_qp_interface.data[0+:56]   = slv_reg[RDMA_0_CTX_REG_0][0+:56]; // local qpn, qp state 
+assign m_rdma_0_qp_interface.data[56+:48]  = slv_reg[RDMA_0_CTX_REG_1][0+:48]; // local psn, remote psn
+assign m_rdma_0_qp_interface.data[104+:64] = slv_reg[RDMA_0_CTX_REG_2][0+:64]; // vaddr, remote key
 
 // RDMA qp connection interface
 assign m_rdma_0_conn_interface.data[39:0] = slv_reg[RDMA_0_CONN_REG_0][39:0]; // remote qpn, local qpn (24?)
@@ -1092,10 +1105,9 @@ assign m_rdma_0_conn_interface.data[183:168] = slv_reg[RDMA_0_CONN_REG_0][55:40]
 `ifdef EN_RDMA_1
 
 // RDMA qp interface
-assign m_rdma_1_qp_interface.data[0+:51] = slv_reg[RDMA_1_CTX_REG_0][50:0]; // remote psn, local qpn, qp state 
-assign m_rdma_1_qp_interface.data[51+:40] = slv_reg[RDMA_1_CTX_REG_1][39:0]; // remote key, local psn
-assign m_rdma_1_qp_interface.data[91+:48] = slv_reg[RDMA_1_CTX_REG_2][47:0]; // vaddr
-assign m_rdma_1_qp_interface.data[139+:5] = 0;
+assign m_rdma_1_qp_interface.data[0+:56]   = slv_reg[RDMA_1_CTX_REG_0][0+:56]; // local qpn, qp state 
+assign m_rdma_1_qp_interface.data[56+:48]  = slv_reg[RDMA_1_CTX_REG_1][0+:48]; // local psn, remote psn
+assign m_rdma_1_qp_interface.data[104+:64] = slv_reg[RDMA_1_CTX_REG_2][0+:64]; // vaddr, remote key
 
 // RDMA qp connection interface
 assign m_rdma_1_conn_interface.data[39:0] = slv_reg[RDMA_1_CONN_REG_0][39:0]; // remote qpn, local qpn (24?)
@@ -1128,6 +1140,7 @@ assign m_drop_rx_0.valid = post_drop_rx_0;
 assign m_drop_rx_0.data = slv_reg[NET_DROP_RX_0][31:0];
 assign m_drop_tx_0.valid = post_drop_tx_0;
 assign m_drop_tx_0.data = slv_reg[NET_DROP_TX_0][31:0];
+
 `endif
 `ifdef EN_NET_1
 assign m_clear_drop_1 = slv_reg[NET_DROP_CLEAR_1][0];
@@ -1135,6 +1148,7 @@ assign m_drop_rx_1.valid = post_drop_rx_1;
 assign m_drop_rx_1.data = slv_reg[NET_DROP_RX_1][31:0];
 assign m_drop_tx_1.valid = post_drop_tx_1;
 assign m_drop_tx_1.data = slv_reg[NET_DROP_TX_1][31:0];
+
 `endif
 `endif 
 

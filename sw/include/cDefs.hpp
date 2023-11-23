@@ -80,6 +80,8 @@ namespace fpga {
 #define IOCTL_READ_CNFG                     _IOR('D', 32, unsigned long)
 #define IOCTL_READ_ENG_STATUS           	_IOR('D', 35, unsigned long)
 
+#define IOCTL_NET_DROP           	        _IOW('D', 36, unsigned long)
+
 /* Control reg */
 #define CTRL_START_RD 					    (1UL)
 #define CTRL_START_WR 					    (1UL << 1)
@@ -157,6 +159,12 @@ enum class CnfgAvxRegs : uint32_t {
     RDMA_POST_REG_0 = 17,
     RDMA_POST_REG_1 = 18,
     RDMA_STAT_REG = 19,
+    RDMA_CMPLT_REG = 20,
+    TCP_OPEN_CON_REG = 32,
+    TCP_OPEN_PORT_REG = 33,
+    TCP_OPEN_CON_STS_REG = 34,
+    TCP_OPEN_PORT_STS_REG = 35,
+    TCP_CLOSE_CON_REG = 36,   
     STAT_DMA_REG = 64
 };
 
@@ -195,7 +203,14 @@ enum class CnfgLegRegs : uint32_t {
     RDMA_POST_REG_7 = 40,
     RDMA_STAT_CMD_USED_REG = 41,
     RDMA_STAT_POSTED_REG = 42,
-    STAT_DMA_REG = 64
+    RDMA_CMPLT_REG = 43,
+    STAT_DMA_REG = 64,
+    TCP_OPEN_CON_REG = 65,
+    TCP_OPEN_PORT_REG = 66,
+    TCP_OPEN_CON_STS_REG = 67,
+    TCP_OPEN_PORT_STS_REG = 68,
+    TCP_CLOSE_CON_REG = 69,
+    STAT_RDMA_REG = 128
 };
 
 /**
@@ -204,10 +219,7 @@ enum class CnfgLegRegs : uint32_t {
 enum ibvOpcode { 
     IBV_WR_RDMA_READ, 
     IBV_WR_RDMA_WRITE, 
-    IBV_WR_SEND,
-    IBV_WR_IMMED_LOW,
-    IBV_WR_IMMED_MID,
-    IBV_WR_IMMED_HIGH
+    IBV_WR_SEND
 };
 
 // ======-------------------------------------------------------------------------------
@@ -269,10 +281,11 @@ constexpr auto const nNetRegs = 9;
 constexpr auto const qsfpOffsAvx = 8;
 constexpr auto const qsfpOffsLeg = 16;
 
-constexpr auto const qpContextQpnOffs = 3;
-constexpr auto const qpContextRpsnOffs = 27;
-constexpr auto const qpContextLpsnOffs = 0;
-constexpr auto const qpContextRkeyOffs = 24;
+constexpr auto const qpContextQpnOffs = 32;
+constexpr auto const qpContextRpsnOffs = 0;
+constexpr auto const qpContextLpsnOffs = 24;
+constexpr auto const qpContextRkeyOffs = 0;
+constexpr auto const qpContextVaddrOffs = 16;
 
 constexpr auto const connContextLqpnOffs = 0;
 constexpr auto const connContextRqpnOffs = 16;

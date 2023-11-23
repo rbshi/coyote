@@ -55,6 +55,7 @@ static struct kobj_attribute kobj_attr_nstats_q0 = __ATTR_RO(cyt_attr_nstats_q0)
 static struct kobj_attribute kobj_attr_nstats_q1 = __ATTR_RO(cyt_attr_nstats_q1);
 static struct kobj_attribute kobj_attr_xstats = __ATTR_RO(cyt_attr_xstats);
 static struct kobj_attribute kobj_attr_cnfg = __ATTR_RO(cyt_attr_cnfg);
+static struct kobj_attribute kobj_attr_eost = __ATTR(cyt_attr_eost, 0664, cyt_attr_eost_show, cyt_attr_eost_store);
 
 static struct attribute *attrs[] = {
     &kobj_attr_ip_q0.attr,
@@ -65,6 +66,7 @@ static struct attribute *attrs[] = {
     &kobj_attr_nstats_q1.attr,
     &kobj_attr_xstats.attr,
     &kobj_attr_cnfg.attr,
+    &kobj_attr_eost.attr,
     NULL,
 };
 static struct attribute_group attr_group = {
@@ -137,6 +139,13 @@ int read_static_config(struct bus_drvdata *d)
     d->en_pr = (d->fpga_stat_cnfg->pr_cnfg & EN_PR_MASK) >> EN_PR_SHFT;
     pr_info("enabled PR %d\n", d->en_pr);
 
+    // set eost
+    if(d->en_pr) {
+        d->eost = eost;
+        d->fpga_stat_cnfg->pr_eost = eost;
+        pr_info("set EOST [clks] %lld\n", d->eost);
+    }
+
     // network
     d->en_rdma_0 = (d->fpga_stat_cnfg->rdma_cnfg & EN_RDMA_0_MASK) >> EN_RDMA_0_SHFT;
     d->en_rdma_1 = (d->fpga_stat_cnfg->rdma_cnfg & EN_RDMA_1_MASK) >> EN_RDMA_1_SHFT;
@@ -156,7 +165,6 @@ int read_static_config(struct bus_drvdata *d)
         d->fpga_stat_cnfg->net_0_ip = d->net_0_ip_addr;
         d->fpga_stat_cnfg->net_0_mac = d->net_0_mac_addr;
         pr_info("set QSFP0 ip %08x, mac %012llx\n", d->net_0_ip_addr, d->net_0_mac_addr);
-        
     }
     d->en_net_1 = d->en_rdma_1 | d->en_tcp_1;
     if(d->en_net_1) {
@@ -200,10 +208,12 @@ int alloc_card_resources(struct bus_drvdata *d)
     }
 
     for (i = 0; i < N_LARGE_CHUNKS - 1; i++) {
+        d->lchunks[i].used = false;
         d->lchunks[i].id = i;
         d->lchunks[i].next = &d->lchunks[i + 1];
     }
     for (i = 0; i < N_SMALL_CHUNKS - 1; i++) {
+        d->schunks[i].used = false;
         d->schunks[i].id = i;
         d->schunks[i].next = &d->schunks[i + 1];
     }
@@ -392,6 +402,7 @@ int init_fpga_devices(struct bus_drvdata *d)
         }
 
         for (j = 0; j < N_CPID_MAX - 1; j++) {
+            d->fpga_dev[i].pid_chunks[j].used = false;
             d->fpga_dev[i].pid_chunks[j].id = j;
             d->fpga_dev[i].pid_chunks[j].next = &d->fpga_dev[i].pid_chunks[j + 1];
         }
@@ -403,7 +414,7 @@ int init_fpga_devices(struct bus_drvdata *d)
 
         // writeback setup
         if(d->en_wb) {
-            d->fpga_dev[i].wb_addr_virt = pci_alloc_consistent(d->pci_dev, WB_SIZE, &d->fpga_dev[i].wb_phys_addr);
+            d->fpga_dev[i].wb_addr_virt = dma_alloc_coherent(&d->pci_dev->dev, WB_SIZE, &d->fpga_dev[i].wb_phys_addr, GFP_ATOMIC);
             if(!d->fpga_dev[i].wb_addr_virt) {
                 pr_err("failed to allocate writeback memory\n");
                 goto err_wb;
@@ -432,6 +443,7 @@ int init_fpga_devices(struct bus_drvdata *d)
         d->fpga_dev[i].cdev.ops = &fpga_fops;
 
         // Init hash
+        hash_init(pid_cpid_map[i]);
         hash_init(user_lbuff_map[i]);
         hash_init(user_sbuff_map[i]);
 
@@ -454,7 +466,7 @@ err_wb:
     if(d->en_wb) {
         for (j = 0; j < i; j++) {
             set_memory_wb((uint64_t)d->fpga_dev[j].wb_addr_virt, N_WB_PAGES);
-            pci_free_consistent(d->pci_dev, WB_SIZE,
+            dma_free_coherent(&d->pci_dev->dev, WB_SIZE,
                 d->fpga_dev[j].wb_addr_virt, d->fpga_dev[j].wb_phys_addr);
         }
     }
@@ -486,7 +498,7 @@ void free_fpga_devices(struct bus_drvdata *d) {
 
         if(d->en_wb) {
             set_memory_wb((uint64_t)d->fpga_dev[i].wb_addr_virt, N_WB_PAGES);
-            pci_free_consistent(d->pci_dev, WB_SIZE,
+            dma_free_coherent(&d->pci_dev->dev, WB_SIZE,
                 d->fpga_dev[i].wb_addr_virt, d->fpga_dev[i].wb_phys_addr);
         }
 
